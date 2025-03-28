@@ -1,0 +1,495 @@
+    {% load static %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cart</title>
+        <link rel="stylesheet" href="{% static 'cart.css' %}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <style>
+            .cart-count, .wishlist-count {
+                background-color: #ff4444;
+                color: white;
+                border-radius: 50%;
+                padding: 2px 6px;
+                font-size: 12px;
+                margin-left: 5px;
+                vertical-align: top;
+            }
+
+            /* Toast Notification Styles */
+            .toast-container {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+            }
+            .toast {
+                background-color: #333;
+                color: white;
+                padding: 10px 20px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                opacity: 0;
+                transition: opacity 0.3s ease-in-out;
+            }
+            .toast.show {
+                opacity: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h2><a href="/">Phonix</a></h2>
+            <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+            
+            <div class="search-bar">
+                <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                    <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                    <button type="button" id="clearSearch" style="display: none;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </form>
+            </div>
+            
+            <nav>
+                <a href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+                <a href="/wishlist"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+                <div class="dropdown">
+                    <button class="dropbtn"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content">
+                        <a href="{% url 'account_profile' %}">Profile</a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main class="cart-container">
+            <h2>Your Shopping Cart</h2>
+
+            <div id="cart-dynamic-content">
+                {% if cart_items %}
+                    <div class="cart-content" id="cart-content">
+                        <!-- Cart Items List -->
+                        <div class="cart-items">
+                            {% for item in cart_items %}
+                            <div class="cart-item" data-product-id="{{ item.variant.product.id }}" data-stock="{{ item.variant.stock }}">
+                                    {% if item.variant.images.exists %}
+                                        {% with first_image=item.variant.images.first %}
+                                            <img src="{{ first_image.image.url }}" alt="{{ item.variant.product.name }}" class="product-image">
+                                        {% endwith %}
+                                    {% else %}
+                                        <img src="{% static 'images/placeholder.png' %}" alt="No image available" class="product-image">
+                                    {% endif %}
+                                    
+                                    <div class="product-details">
+                                        <h3>{{ item.variant.product.name }}</h3>
+                                        <p>Price: ₹{{ item.variant.price }}</p> <!-- Fixed: Use variant.price -->
+                                        
+                                        <!-- Quantity Controls -->
+                                        <!-- Modify the quantity controls section in your cart item template -->
+                                        <div class="quantity-controls">
+                                            <a href="#" class="quantity-btn {% if item.quantity <= 1 %}disabled{% endif %}" 
+                                            data-action="decrease">➖</a>
+                                            <span class="quantity">{{ item.quantity }}</span>
+                                            <a href="#" class="quantity-btn {% if item.quantity >= item.variant.stock %}disabled{% endif %}" 
+                                            data-action="increase">➕</a>
+                                        </div>
+                                        <!-- Remove Button -->
+                                        <a href="#" class="remove-btn" data-product-id="{{ item.variant.product.id }}">Remove</a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Order Summary -->
+                        <div class="order-summary">
+                            <h3>Order Summary</h3>
+                            <p>Subtotal: ₹<span id="subtotal">{{ subtotal }}</span></p>
+                            <p>Delivery Charges: ₹<span id="delivery-charge">{{ delivery_charge }}</span></p>
+                            <hr>
+                            <p><strong>Total: ₹<span id="total-price">{{ total_price }}</strong></span></p>
+
+                            {% if out_of_stock %}
+                                <p class="error-text">Some items have insufficient stock. Adjust quantities or remove them.</p>
+                                <button class="checkout-btn" disabled>Proceed to Checkout</button>
+                            {% else %}
+                            <button class="checkout-btn" onclick= handleCheckout()>Proceed to Checkout</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p id="empty-cart-message">Your cart is empty.</p>
+                {% endif %}
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2025 Phonix. All rights reserved.</p>
+        </footer>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <script>
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const checkoutBtn = document.querySelector('.checkout-btn');
+                if (checkoutBtn) {
+                    checkoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        handleCheckout();
+                    });
+                }
+            
+
+                document.getElementById('clearSearch').addEventListener('click', function() {
+                    document.getElementById('searchInput').value = '';
+                    window.location.href = '{% url "shop_page" %}';
+                });
+        
+                const searchInput = document.getElementById('searchInput');
+                const clearButton = document.getElementById('clearSearch');
+        
+                searchInput.addEventListener('input', function() {
+                    clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+                });
+        
+                window.onload = function() {
+                    clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+                    loadInitialCounts();
+                    setupQuantityControls();
+                    setupRemoveControls();
+                };
+        
+                // Load initial counts for cart and wishlist
+                function loadInitialCounts() {
+                    fetch('/get_cart_count/', {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.cart_count !== undefined) {
+                            updateCartCount(data.cart_count);
+                        }
+                    })
+                    .catch(error => console.error('Error loading cart count:', error));
+        
+                    fetch('/get_wishlist_count/', {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.wishlist_count !== undefined) {
+                            updateWishlistCount(data.wishlist_count);
+                        }
+                    })
+                    .catch(error => console.error('Error loading wishlist count:', error));
+                }
+        
+                // Update cart count
+                function updateCartCount(count) {
+                    const cartCountElement = document.querySelector('.cart-count');
+                    cartCountElement.textContent = count || '0';
+                }
+        
+                // Update wishlist count
+                function updateWishlistCount(count) {
+                    const wishlistCountElement = document.querySelector('.wishlist-count');
+                    wishlistCountElement.textContent = count || '0';
+                }
+        
+                // Initialize quantity controls with stock validation
+                function setupQuantityControls() {
+                    document.querySelectorAll('.cart-item').forEach(cartItem => {
+                        const quantity = parseInt(cartItem.querySelector('.quantity').textContent);
+                        const decreaseBtn = cartItem.querySelector('.quantity-btn[data-action="decrease"]');
+                        const increaseBtn = cartItem.querySelector('.quantity-btn[data-action="increase"]');
+                        const stock = parseInt(cartItem.getAttribute('data-stock') || '999'); // Fallback if data-stock not set
+                        // Set initial button states
+                        if (quantity <= 1) {
+                            decreaseBtn.classList.add('disabled');
+                        }
+                            
+                        if (quantity >= stock) {
+                            increaseBtn.classList.add('disabled');
+                        }
+        
+                        // Add click handlers
+                        decreaseBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (!this.classList.contains('disabled')) {
+                                const productId = cartItem.getAttribute('data-product-id');
+                                this.classList.add('processing');
+                                updateQuantity(productId, 'decrease', cartItem);
+                            }
+                        });
+                        increaseBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (!this.classList.contains('disabled')) {
+                                const productId = cartItem.getAttribute('data-product-id');
+                                this.classList.add('processing');
+                                updateQuantity(productId, 'increase', cartItem);
+                            }
+                        });
+                    });
+                }
+
+
+           
+        
+                function handleQuantityClick(event) {
+                    event.preventDefault();
+                    const action = this.getAttribute('data-action');
+                    const cartItem = this.closest('.cart-item');
+                    const productId = cartItem.getAttribute('data-product-id');
+        
+                    this.classList.add('processing');
+                    updateQuantity(productId, action, cartItem);
+                }
+        
+                // Toast Notification Function
+                function showToast(message) {
+                    const toastContainer = document.getElementById('toastContainer');
+                    const toast = document.createElement('div');
+                    toast.classList.add('toast');
+                    toast.textContent = message;
+        
+                    toastContainer.appendChild(toast);
+        
+                    setTimeout(() => toast.classList.add('show'), 100);
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+        
+                function handleCheckout() {
+
+                    try{
+                        console.log("handleCheckout triggered");
+                        const cartItems = document.querySelectorAll('.cart-item');
+                        let hasZeroQuantity = false;
+            
+                        cartItems.forEach(item => {
+                            const quantity = parseInt(item.querySelector('.quantity').textContent);
+                            if (quantity === 0) {
+                                hasZeroQuantity = true;
+                            }
+                        });
+    
+    
+                        if (hasZeroQuantity) {
+                            showToast('Insufficient quantity for some items. Please adjust quantities.');
+                        } else {
+                            const checkoutUrl = "{% url 'checkout' %}"; // Store URL
+                            console.log("Redirecting to:", checkoutUrl); // Debug URL
+                            if (checkoutUrl) {
+                                window.location.href = "{% url 'checkout' %}";
+                            } else {
+                                console.error("Checkout URL not resolved");
+                                {% comment %} showToast("Error: Unable to navigate to checkout. Please try again.");
+                                window.location.href = "/checkout/";  {% endcomment %}
+                            }
+                        }
+                    }catch(err){
+                        console.log("error in handle checkout",err)
+                    }
+                }
+        });
+
+            // Update quantity via AJAX
+        // Update quantity via AJAX with stock validation
+            function updateQuantity(productId, action, cartItem) {
+                const quantityElement = cartItem.querySelector('.quantity');
+                const currentQuantity = parseInt(quantityElement.textContent);
+                const decreaseBtn = cartItem.querySelector('.quantity-btn[data-action="decrease"]');
+                const increaseBtn = cartItem.querySelector('.quantity-btn[data-action="increase"]');
+                const productName = cartItem.querySelector('.product-details h3').textContent;
+
+                fetch(`/update_cart_quantity/${productId}/${action}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.message || 'Request failed'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    cartItem.querySelectorAll('.quantity-btn').forEach(btn => btn.classList.remove('processing'));
+
+                    if (data.success) {
+                        // Update quantity display
+                        if (data.quantity > 0) {
+                            quantityElement.textContent = data.quantity;
+                        } else {
+                            // Item was removed (quantity went to 0)
+                            cartItem.remove();
+                            updateCartVisibility();
+                        }
+
+                        // Update button states
+                        if (action === 'increase') {
+                            if (data.quantity >= data.stock) {
+                                increaseBtn.classList.add('disabled');
+                                showToast(`Cannot add more ${productName}. Stock limit reached.`, 'error');
+                            }
+                            decreaseBtn.classList.remove('disabled');
+                        } else if (action === 'decrease') {
+                            if (data.quantity <= 1) {
+                                decreaseBtn.classList.add('disabled');
+                            }
+                            increaseBtn.classList.remove('disabled');
+                        }
+
+                        // Update order summary
+                        document.getElementById('subtotal').textContent = data.subtotal;
+                        document.getElementById('delivery-charge').textContent = data.delivery_charge;
+                        document.getElementById('total-price').textContent = data.total_price;
+                        updateCartCount(data.cart_count);
+
+                        if (data.quantity > 0) {
+                            showToast(`${productName} quantity updated to ${data.quantity}`);
+                        } else {
+                            showToast(`${productName} removed from cart`);
+                        }
+                    } else {
+                        showToast(data.message || 'Failed to update quantity.', 'error');
+                        // Revert UI if update failed
+                        if (action === 'increase') {
+                            quantityElement.textContent = currentQuantity;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    cartItem.querySelectorAll('.quantity-btn').forEach(btn => btn.classList.remove('processing'));
+                    showToast(error.message || 'Failed to update quantity.', 'error');
+                });
+            }
+
+            // Setup remove controls with AJAX
+            function setupRemoveControls() {
+                document.querySelectorAll('.remove-btn').forEach(button => {
+                    button.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        console.log("Remove button clicked!"); // Add this line
+                        const productId = this.getAttribute('data-product-id');
+                        const cartItem = this.closest('.cart-item');
+                        const productName = cartItem.querySelector('.product-details h3').textContent;
+                        this.classList.add('processing');
+                        removeItem(productId, cartItem, productName);
+                    });
+                });
+            }
+
+            // Enhanced remove item function
+            function removeItem(productId, cartItem, productName) {
+                console.log(`Attempting to remove product ID: ${productId}`);
+                
+                // Ensure CSRF token is correctly obtained
+                const csrfToken = getCookie('csrftoken');
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    showToast('CSRF token missing. Please refresh the page.', 'error');
+                    return;
+                }
+            
+                fetch(`/remove_from_cart/${productId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Remove response:", data); 
+                    if (data.success) {
+                        cartItem.remove();
+                        showToast(`${productName} removed from cart`);
+                        
+                        // Update order summary
+                        document.getElementById('subtotal').textContent = data.subtotal;
+                        document.getElementById('delivery-charge').textContent = data.delivery_charge;
+                        document.getElementById('total-price').textContent = data.total_price;
+                        updateCartCount(data.cart_count);
+                        
+                        updateCartVisibility();
+                    } else {
+                        throw new Error(data.message || 'Failed to remove item.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing item:', error);
+                    showToast(error.message || 'Failed to remove item. Please try again.', 'error');
+                    cartItem.querySelector('.remove-btn').classList.remove('processing');
+                });
+            }
+
+            // Toggle cart visibility
+            function updateCartVisibility() {
+                const cartContent = document.getElementById('cart-content');
+                const emptyCartMessage = document.getElementById('empty-cart-message');
+                const cartItems = document.querySelectorAll('.cart-item');
+
+                if (cartItems.length === 0) {
+                    if (cartContent) cartContent.style.display = 'none';
+                    if (!emptyCartMessage) {
+                        const newEmptyMessage = document.createElement('p');
+                        newEmptyMessage.id = 'empty-cart-message';
+                        newEmptyMessage.textContent = 'Your cart is empty.';
+                        document.getElementById('cart-dynamic-content').appendChild(newEmptyMessage);
+                    } else {
+                        emptyCartMessage.style.display = 'block';
+                    }
+                } else {
+                    if (cartContent) cartContent.style.display = 'flex';
+                    if (emptyCartMessage) emptyCartMessage.style.display = 'none';
+                }
+            }
+
+            // Handle checkout button click
+           
+
+        
+
+            // Get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        </script>
+    </body>
+    </html>

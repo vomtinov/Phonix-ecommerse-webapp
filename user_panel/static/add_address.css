@@ -1,0 +1,276 @@
+/* Reuse the existing header and footer styles from manage_address.css */
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+body {
+    background-color: #ffffff;
+    color: #111111;
+    line-height: 1.5;
+}
+
+/* Header (Copied from manage_address.css) */
+header {
+    background-color: #131921;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+header h1 a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+header h2 a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 18px;
+    margin-left: 25px;
+    font-weight: 500;
+}
+
+/* Search Bar Styling (Copied from manage_address.css) */
+.search-bar {
+    flex-grow: 1;
+    margin: 0 25px;
+}
+
+.search-bar form {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #febd69;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    padding: 10px;
+    width: 100%;
+    font-size: 15px;
+}
+
+.search-bar button {
+    background-color: #febd69;
+    border: none;
+    color: #111111;
+    font-size: 16px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-bar button:hover {
+    background-color: #f3a847;
+}
+
+#clearSearch {
+    color: #555555;
+    padding: 10px;
+    font-size: 14px;
+}
+
+/* Navigation Styling (Copied from manage_address.css) */
+nav {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+nav a {
+    color: #ffffff;
+    font-size: 20px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+nav a:hover {
+    color: #febd69;
+}
+
+/* Dropdown Styling (Copied from manage_address.css) */
+.dropdown {
+    position: relative;
+}
+
+.dropbtn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #ffffff;
+    min-width: 140px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.dropdown-content a {
+    color: #111111;
+    padding: 12px 20px;
+    display: block;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dropdown-content a:hover {
+    background-color: #f5f5f5;
+    color: #e47911;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Footer Styling (Copied from manage_address.css) */
+footer {
+    background-color: #232f3e;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    margin-top: 20px;
+}
+
+footer p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Add Address Page Specific Styles (Unchanged) */
+.container {
+    display: flex;
+    margin: 20px;
+}
+
+/* Sidebar Styling (Unchanged) */
+.sidebar {
+    width: 250px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+    color: #333;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.sidebar ul li a:hover {
+    color: #febd69;
+}
+
+.logout-btn {
+    background-color: #ff4d4d;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    text-align: left;
+}
+
+.logout-btn:hover {
+    background-color: #ff1a1a;
+}
+
+/* Main Content Styling (Unchanged) */
+.content {
+    flex-grow: 1;
+    margin-left: 20px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Form Styling (Unchanged) */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+form label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+form input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+form input:focus {
+    border-color: #febd69;
+    box-shadow: 0 0 5px rgba(254, 189, 105, 0.5);
+}
+
+form button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+form button[type="submit"] {
+    background-color: #28a745;
+    color: #fff;
+}
+
+form button[type="submit"]:hover {
+    background-color: #218838;
+}
+
+form button[type="button"] {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+form button[type="button"]:hover {
+    background-color: #c82333;
+}

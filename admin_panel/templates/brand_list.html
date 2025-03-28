@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand List</title>
+    <link rel="stylesheet" href="{% static 'brand_list.css' %}">
+</head>
+<body>
+    <div class="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <h2>Category</h2>
+        <ul>
+            <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'users' %}">Users</a></li>
+            <li><a href="{% url 'category_list' %}">Category</a></li>
+            <li><a href="{% url 'add_category' %}">Add Category</a></li>
+            <li><a href="{% url 'brand_list' %}">Brand</a></li>
+            <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
+            <li><a href="{% url 'product_list' %}">Product</a></li>
+            <li><a href="{% url 'add_product' %}">Add Product</a></li>
+            <li><a href="#">Coupon</a></li>
+            <li><a href="#">Orders</a></li>
+            <li><a href="#">Offers</a></li>
+            <li><a href="#">Return</a></li>
+            <li><a href="#">Sales Report</a></li>
+            <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+        </ul>
+    </div>
+    
+    <div class="container">
+        <h2>Brand Management</h2>
+        <a href="{% url 'add_brand' %}" class="add-btn">Add New Brand</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>Brand Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for brand in brands %}
+                <tr>
+                    <td>{{ brand.name }}</td>
+                    <td>{{ brand.description }}</td>
+                    <td>{{ brand.status|yesno:"Active,Inactive" }}</td>
+                    <td>
+                        <a href="{% url 'edit_brand' brand.id %}" class="edit-btn">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function toggleSidebar() {
+            let sidebar = document.querySelector(".sidebar");
+            let formContainer = document.querySelector(".form-container");
+        
+            if (sidebar.style.width === "250px") {
+                sidebar.style.width = "70px";
+                formContainer.style.marginLeft = "90px";
+            } else {
+                sidebar.style.width = "250px";
+                formContainer.style.marginLeft = "270px";
+            }
+        }
+        </script>
+        
+</body>
+</html>

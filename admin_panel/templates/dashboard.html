@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{% static 'admin_panel.css' %}">
+    <script>
+        function toggleSidebar() {
+            let sidebar = document.querySelector(".sidebar");
+            let content = document.querySelector(".content");
+            
+            sidebar.classList.toggle("collapsed");
+            content.classList.toggle("expanded");
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <h2>Admin Dashboard</h2>
+    </header>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul>
+            <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'users' %}">Users</a></li>
+            <li><a href="{% url 'category_list' %}">Category</a></li>
+            <li><a href="{% url 'add_category' %}">Add Category</a></li>
+            <li><a href="{% url 'brand_list' %}">Brand</a></li>
+            <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
+            <li><a href="{% url 'product_list' %}">Product</a></li>
+            <li><a href="{% url 'add_product' %}">Add Product</a></li>
+            <li><a href="#">Coupon</a></li>
+            <li><a href="#">Orders</a></li>
+            <li><a href="#">Offers</a></li>
+            <li><a href="#">Return</a></li>
+            <li><a href="#">Sales Report</a></li>
+            <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <h1>Welcome to Admin Dashboard</h1>
+        <p>Manage your website efficiently.</p>
+    </div>
+
+</body>
+</html>

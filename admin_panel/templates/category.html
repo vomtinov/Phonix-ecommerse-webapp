@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories</title>
+    <link rel="stylesheet" href="{% static 'category.css' %}">
+    <script src="{% static 'category.js' %}"></script>
+    <script>
+        function toggleSidebar() {
+            let sidebar = document.querySelector(".sidebar");
+            sidebar.classList.toggle("collapsed");
+        }
+
+        function confirmAction(url, action) {
+            if (confirm(`Are you sure you want to ${action} this category?`)) {
+                window.location.href = url;
+            }
+            return false;
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <h2>Category</h2>
+        
+        <ul>
+            <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'users' %}">Users</a></li>
+            <li><a href="{% url 'category_list' %}">Category</a></li>
+            <li><a href="{% url 'add_category' %}">Add Category</a></li>
+            <li><a href="{% url 'brand_list' %}">Brand</a></li>
+            <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
+            <li><a href="{% url 'product_list' %}">Product</a></li>
+            <li><a href="{% url 'add_product' %}">Add Product</a></li>
+            <li><a href="#">Coupon</a></li>
+            <li><a href="#">Orders</a></li>
+            <li><a href="#">Offers</a></li>
+            <li><a href="#">Return</a></li>
+            <li><a href="#">Sales Report</a></li>
+            <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <h2>Category List</h2>
+        <form method="GET" action="{% url 'category_list' %}" id="searchForm">
+            <input type="text" name="search" placeholder="Search by name..." value="{{ request.GET.search }}" id="searchInput">
+            <button type="submit">Search</button>
+            <button type="button" id="clearSearch" style="display: {% if not request.GET.search %}none{% else %}inline-block{% endif %};">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        </form>
+        <table class="category-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.description }}</td>
+                    <td>{{ category.status|yesno:"Active,Inactive" }}</td>
+                    <td>
+                        <a href="{% url 'edit_category' category.id %}" class="edit-button">Edit</a>
+                        <a href="#" onclick="return confirmAction('{% url 'delete_category' category.id %}', 'delete');" class="delete-button">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No categories available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if categories.has_previous %}
+                <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">First</a>
+                <a href="?page={{ categories.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Previous</a>
+            {% endif %}
+            
+            <span>Page {{ categories.number }} of {{ categories.paginator.num_pages }}</span>
+            
+            {% if categories.has_next %}
+                <a href="?page={{ categories.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next</a>
+                <a href="?page={{ categories.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Last</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            let sidebar = document.querySelector(".sidebar");
+            sidebar.classList.toggle("collapsed");
+        }
+    
+        function confirmAction(url, action) {
+            if (confirm(`Are you sure you want to ${action} this category?`)) {
+                window.location.href = url;
+            }
+            return false;
+        }
+    
+        // Add JavaScript for the clear search button
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            window.location.href = '{% url "category_list" %}?clear=yes';  // Redirect to category list with clear parameter
+        });
+    
+        // Dynamic visibility of clear button based on input
+        const searchInput = document.getElementById('searchInput');
+        const clearButton = document.getElementById('clearSearch');
+    
+        searchInput.addEventListener('input', function() {
+            clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+        });
+    
+        // Initial check on page load
+        window.onload = function() {
+            clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Brand</title>
+    <link rel="stylesheet" href="{% static 'edit_brand.css' %}">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Edit Brand</h2>
+        <form method="POST">
+            {% csrf_token %}
+            <label>Brand Name:</label>
+            <input type="text" name="name" value="{{ brand.name }}" required>
+
+            <label>Description:</label>
+            <textarea name="description">{{ brand.description }}</textarea>
+
+            <label>Status:</label>
+            <select name="status">
+                <option value="1" {% if brand.status %}selected{% endif %}>Active</option>
+                <option value="0" {% if not brand.status %}selected{% endif %}>Inactive</option>
+            </select>
+
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,271 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Profile</title>
+    <link rel="stylesheet" href="{% static 'account_detail.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .cart-count, .wishlist-count {
+            background-color: #ff4444; /* Red background */
+            color: white; /* White text */
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 6px; /* Padding for spacing */
+            font-size: 12px; /* Font size */
+            margin-left: 5px; /* Margin to separate from the icon */
+            vertical-align: top; /* Align with the icon */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
+
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <aside class="sidebar">
+            <ul>
+                <li><a href="{% url 'account_profile' %}" >Account Overview</a></li>
+                <li><a href="{% url 'order_details' %}">Order Details</a></li>
+                <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
+                <li><a href="/wallet">Wallet</a></li>
+                <li><a href="/wishlist">Wishlist</a></li>
+                <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
+            </ul>
+        </aside>
+        
+        <main class="content" id="mainContent">
+            <h2>Account Overview</h2>
+            <div id="userDetails">
+                {% if user.is_authenticated %}
+                    <div class="profile-container">
+                        <img src="{{ user.profile_image.url|default:'/static/default.jpg' }}" alt="Profile Image" class="profile-pic" id="profileImage">
+                    </div>
+            
+                    <form method="POST" id="editForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div id="displayDetails">
+                            <p><strong>Username:</strong> <span id="usernameDisplay">{{ user.username }}</span></p>
+                            <p><strong>Email:</strong> <span id="emailDisplay">{{ user.email }}</span></p>
+                            <button type="button" id="editButton">Edit</button>
+                        </div>
+                    
+                        <div id="editDetails" style="display: none;">
+                            <label><strong>Username:</strong></label>
+                            <input type="text" id="usernameInput" name="username" value="{{ user.username }}" required>
+                    
+                            <label><strong>Email:</strong></label>
+                            <input type="email" id="emailInput" name="email" value="{{ user.email }}" required>
+                    
+                            <label><strong>Profile Image:</strong></label>
+                            <input type="file" id="profileUpload" name="profile_image" accept="image/*" style="display: none;">
+                            <label for="profileUpload" class="edit-profile-pic">Upload Image</label>
+                    
+                            <button type="submit">Save Changes</button>
+                            <button type="button" id="cancelEdit">Cancel</button>
+                        </div>
+                    </form>
+                    
+                {% else %}
+                    <p>Please <a href="/login">login</a> to view your account details.</p>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+    
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 🔹 Search Input & Clear Button
+        let searchInput = document.getElementById("searchInput");
+        let clearSearch = document.getElementById("clearSearch");
+
+        searchInput.addEventListener("input", function () {
+            clearSearch.style.display = searchInput.value.trim() !== "" ? "inline-block" : "none";
+        });
+
+        clearSearch.addEventListener("click", function () {
+            searchInput.value = "";
+            clearSearch.style.display = "none";
+        });
+
+        // 🔹 Profile Picture Upload & Preview
+        let profileUpload = document.getElementById("profileUpload");
+        let profileImage = document.getElementById("profileImage");
+
+        profileUpload.addEventListener("change", function () {
+            let file = this.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    profileImage.src = e.target.result; // Preview the new image
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 🔹 Edit & Cancel Button Logic
+        let editButton = document.getElementById("editButton");
+        let cancelEdit = document.getElementById("cancelEdit");
+        let displayDetails = document.getElementById("displayDetails");
+        let editDetails = document.getElementById("editDetails");
+
+        editButton.addEventListener("click", function () {
+            console.log("Edit button clicked");
+            displayDetails.style.display = "none";
+            editDetails.style.display = "block";
+        });
+
+        cancelEdit.addEventListener("click", function () {
+            console.log("Cancel button clicked");
+            displayDetails.style.display = "block";
+            editDetails.style.display = "none";
+        });
+
+        // 🔹 AJAX Form Submission for Updating Profile
+        let editForm = document.getElementById("editForm");
+        let usernameDisplay = document.getElementById("usernameDisplay");
+        let emailDisplay = document.getElementById("emailDisplay");
+        let csrfToken = document.querySelector("input[name='csrfmiddlewaretoken']").value;
+
+        editForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            let formData = new FormData(editForm);
+            let fetchUrl = "{% url 'update_profile' %}";
+            console.log("Fetching URL:", fetchUrl);
+
+            let headers = new Headers({
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrfToken
+            });
+            console.log("Request Headers:", [...headers.entries()]);
+
+            fetch(fetchUrl, {
+                method: "POST",
+                body: formData,
+                headers: headers
+            })
+            .then(response => {
+                console.log("Response Status:", response.status);
+                console.log("Response Headers:", [...response.headers.entries()]);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.log("Raw Response:", text);
+                        throw new Error(`HTTP error! Status: ${response.status}, Response: ${text.substring(0, 100)}...`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Parsed JSON Response:", data);
+                if (data.success) {
+                    usernameDisplay.textContent = data.username;
+                    emailDisplay.textContent = data.email;
+                    if (data.profile_image) {
+                        profileImage.src = data.profile_image;
+                    }
+                    displayDetails.style.display = "block";
+                    editDetails.style.display = "none";
+                } else {
+                    alert("Error updating profile: " + JSON.stringify(data.errors));
+                }
+            })
+            .catch(error => {
+                console.error("Fetch Error:", error);
+                alert("An error occurred while updating the profile: " + error.message);
+            });
+        });
+
+        // 🔹 Load Cart and Wishlist Counts
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial cart count response:', data);
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                } else {
+                    console.log('No cart_count in initial response, setting to 0');
+                    updateCartCount(0);
+                }
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+        
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial wishlist count response:', data);
+                if (data.wishlist_count !== undefined && data.wishlist_count !== null) {
+                    updateWishlistCount(data.wishlist_count);
+                } else {
+                    console.log('No valid wishlist_count in initial response, setting to 0');
+                    updateWishlistCount(0);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading wishlist count:', error);
+                updateWishlistCount(0);
+            });
+        }
+
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+            console.log('Updated cart count to:', count || '0');
+        }
+
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+            wishlistCountElement.style.display = 'inline-block'; // Ensure visibility
+            console.log('Updated wishlist count to:', count || '0');
+        }
+
+        // Load counts on page load
+        loadInitialCounts();
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offer List</title>
+    <link rel="stylesheet" href="{% static 'offer.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">☰</button>
+        <h2>Products</h2>
+        <ul>
+            <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'users' %}">Users</a></li>
+            <li><a href="{% url 'category_list' %}">Category</a></li>
+            <li><a href="{% url 'add_category' %}">Add Category</a></li>
+            <li><a href="{% url 'brand_list' %}">Brand</a></li>
+            <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
+            <li><a href="{% url 'product_list' %}">Product</a></li>
+            <li><a href="{% url 'add_product' %}">Add Product</a></li>
+            <li><a href="">Coupon</a></li>
+            <li><a href="">Orders</a></li>
+            <li><a href="#">Offers</a></li>
+            <li><a href="">Return</a></li>
+            <li><a href="">Sales Report</a></li>
+            <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+            
+        </ul>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Offer Management</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <a href="{% url 'add_offer' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-plus"></i> Add New Offer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="offer-type-tabs mb-4">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link {% if offer_type == 'CATEGORY' %}active{% endif %}" 
+                               href="{% url 'offer_management' %}?type=CATEGORY">
+                                Category Offers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if offer_type == 'PRODUCT' %}active{% endif %}" 
+                               href="{% url 'offer_management' %}?type=PRODUCT">
+                                Product Offers
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+    
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Offer Name</th>
+                                        {% if offer_type == 'CATEGORY' %}
+                                            <th>Category</th>
+                                        {% else %}
+                                            <th>Product</th>
+                                        {% endif %}
+                                        <th>Discount Type</th>
+                                        <th>Discount</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for offer in offers %}
+                                        <tr>
+                                            <td>{{ offer.name }}</td>
+                                            <td>
+                                                {% if offer_type == 'CATEGORY' %}
+                                                    {{ offer.category.name }}
+                                                {% else %}
+                                                    {{ offer.product.name }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ offer.get_offer_type_display }}</td>
+                                            <td>
+                                                {% if offer.offer_type == 'PERCENTAGE' %}
+                                                    {{ offer.discount }}%
+                                                {% else %}
+                                                    ₹{{ offer.discount }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ offer.start_date|date:"d-M-Y" }}</td>
+                                            <td>{{ offer.end_date|date:"d-M-Y" }}</td>
+                                            <td>
+                                                {% if offer.status %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if offer.is_currently_active %}
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{% url 'edit_offer' offer.id %}" 
+                                                           class="btn btn-sm btn-primary">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-danger delete-offer" 
+                                                                data-offer-id="{{ offer.id }}">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                {% else %}
+                                                    
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="8" class="text-center">
+                                                No offers found.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Delete offer functionality
+            const deleteButtons = document.querySelectorAll('.delete-offer');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const offerId = this.getAttribute('data-offer-id');
+                    
+                    // Sweet Alert confirmation
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'Do you want to delete this offer?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // AJAX call to delete offer
+                            fetch(`/admin/offer/delete/${offerId}/`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': '{{ csrf_token }}',
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    Swal.fire(
+                                        'Deleted!',
+                                        'Offer has been deleted.',
+                                        'success'
+                                    ).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire(
+                                        'Error!',
+                                        data.message || 'Could not delete offer.',
+                                        'error'
+                                    );
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                Swal.fire(
+                                    'Error!',
+                                    'Something went wrong.',
+                                    'error'
+                                );
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

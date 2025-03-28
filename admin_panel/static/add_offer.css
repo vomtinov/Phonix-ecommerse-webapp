@@ -1,0 +1,490 @@
+/* offer.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: #2c3e50;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #2c3e50, #3498db);
+    color: white;
+    height: 100vh;
+    position: fixed;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+.sidebar h2 {
+    padding: 25px 20px;
+    font-size: 1.8rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 5px 0;
+}
+
+.sidebar ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    position: relative;
+    font-size: 1rem;
+}
+
+.sidebar ul li a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 25px;
+    transform: translateX(5px);
+}
+
+.sidebar ul li a:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: #fff;
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.sidebar ul li a:hover:before {
+    transform: scaleY(1);
+}
+
+.toggle-btn {
+    position: absolute;
+    right: -50px;
+    top: 15px;
+    background: #3498db;
+    border: none;
+    color: white;
+    padding: 12px 15px;
+    cursor: pointer;
+    border-radius: 0 8px 8px 0;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn:hover {
+    background: #2980b9;
+    transform: scale(1.1);
+}
+
+/* Main Container */
+.container-fluid {
+    margin-left: 280px;
+    padding: 20px;
+    width: calc(100% - 280px);
+    transition: all 0.3s ease;
+}
+
+main {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Section */
+.d-flex {
+    background: linear-gradient(45deg, #3498db, #2ecc71);
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.h2 {
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.btn-outline-primary {
+    border-color: white;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-outline-primary:hover {
+    background: white;
+    color: #3498db;
+    transform: translateY(-2px);
+}
+
+/* Tabs (for offer.html) */
+.offer-type-tabs .nav-tabs {
+    border: none;
+    background: #ecf0f1;
+    padding: 5px;
+    border-radius: 25px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    padding: 10px 20px;
+    color: #7f8c8d;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.nav-tabs .nav-link.active {
+    background: #3498db;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav-tabs .nav-link:hover {
+    color: #3498db;
+}
+
+/* Card and Table */
+.card {
+    border: none;
+    background: transparent;
+}
+
+.table-responsive {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    overflow-x: auto;
+}
+
+.table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    width: 100%;
+}
+
+.table thead {
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    color: white;
+}
+
+.table th {
+    padding: 12px 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.9);
+    vertical-align: middle;
+    border: none;
+    font-size: 0.9rem;
+}
+
+.table tr {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.table tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Inputs (for add_offer.html) */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    outline: none;
+}
+
+/* Badges (for offer.html) */
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.badge.bg-success {
+    background: #2ecc71 !important;
+}
+
+.badge.bg-danger {
+    background: #e74c3c !important;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Buttons */
+.btn-group .btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    margin: 0 5px;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.btn-primary {
+    background: #3498db;
+    border: none;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Alerts (for add_offer.html) */
+.alert-container {
+    margin-bottom: 20px;
+}
+
+.alert {
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 0.9rem;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.btn-close {
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.5;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 991px) {
+    .sidebar {
+        width: 200px;
+        transform: translateX(0);
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(-200px);
+        width: 200px;
+    }
+
+    .container-fluid {
+        margin-left: 200px;
+        width: calc(100% - 200px);
+    }
+
+    .container-fluid.sidebar-collapsed {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .toggle-btn {
+        right: 0;
+        border-radius: 0;
+    }
+
+    .h2 {
+        font-size: 1.5rem;
+    }
+
+    .d-flex {
+        padding: 15px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(-100%);
+        width: 100%;
+    }
+
+    .container-fluid {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+    }
+
+    .toggle-btn {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 1100;
+        border-radius: 8px;
+    }
+
+    .h2 {
+        font-size: 1.3rem;
+    }
+
+    .btn-outline-primary {
+        padding: 6px 15px;
+        font-size: 0.8rem;
+    }
+
+    .offer-type-tabs .nav-tabs {
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .nav-tabs .nav-link {
+        width: 100%;
+        text-align: center;
+        margin: 5px 0;
+    }
+
+    .table th, .table td {
+        padding: 10px;
+        font-size: 0.8rem;
+    }
+
+    .btn-group .btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+
+    .form-control {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}
+
+@media screen and (max-width: 576px) {
+    main {
+        padding: 10px;
+    }
+
+    .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .table th, .table td {
+        padding: 8px;
+        font-size: 0.75rem;
+    }
+
+    .badge {
+        padding: 5px 10px;
+        font-size: 0.7rem;
+    }
+
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .btn-group .btn {
+        width: 100%;
+        margin: 0;
+    }
+
+    .form-control {
+        font-size: 0.75rem;
+        padding: 5px 8px;
+    }
+
+    .alert {
+        font-size: 0.8rem;
+        padding: 10px;
+    }
+}
+
+/* Animation for Sidebar Toggle */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.sidebar {
+    animation: slideIn 0.3s ease-out;
+}

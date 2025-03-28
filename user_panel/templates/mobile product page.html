@@ -1,0 +1,844 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Product Details</title>
+    <link rel="stylesheet" href="{% static 'mobile product page.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
+
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="product-container">
+            <div class="product-gallery">
+                {% with first_variant=product.variants.first %}
+                    {% if first_variant and first_variant.images.exists %}
+                        <div class="main-image">
+                            <img id="main-img" src="{{ first_variant.images.first.image.url }}" alt="{{ product.name }}">
+                        </div>
+                        <div class="thumbnail-images">
+                            {% for image in first_variant.images.all %}
+                                <img src="{{ image.image.url }}" alt="{{ product.name }}" class="thumbnail" onclick="changeImage(this.src)">
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <img id="main-img" src="{% static 'default-image.jpg' %}" alt="Default Image">
+                        <div class="thumbnail-images"></div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="product-info">
+                <h2>{{ product.name }}</h2>
+                {% if product.brand %}
+                    <p class="brand">Brand: <strong>{{ product.brand.name }}</strong></p>
+                {% endif %}
+                {% if product.category %}
+                    <p class="category">Category: <strong>{{ product.category.name }}</strong></p>
+                {% endif %}
+                <p class="description">{{ product.description }}</p>
+                <h2 id="variant-price">
+                    {% with first_variant=product.variants.first %}
+                        Price: ₹{{ first_variant.price|default:'N/A' }}
+                    {% endwith %}
+                </h2>
+
+                <!-- Updated to use 'stock' instead of 'quantity' -->
+                <p class="stock-status" id="stock-status">
+                    {% with first_variant=product.variants.first %}
+                        {% if first_variant and first_variant.stock > 0 %}
+                            <span class="in-stock">In Stock: <span id="stock-quantity">{{ first_variant.stock }}</span></span>
+                        {% else %}
+                            <span class="out-of-stock">Out of Stock</span>
+                        {% endif %}
+                    {% endwith %}
+                </p>
+                
+                {% if product.variants.exists %}
+                    <h3>Available Variants:</h3>
+                    <table id="variant-table">
+                        <thead>
+                            <tr>
+                                <th>RAM</th>
+                                <th>Storage</th>
+                                <th>Color</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for variant in product.variants.all %}
+                                <tr class="variant-row" 
+                                    data-variant-id="{{ variant.id }}" 
+                                    data-price="{{ variant.price }}" 
+                                    data-stock="{{ variant.stock }}" 
+                                    data-images-id="variant-images-{{ variant.id }}">
+                                    <td>{{ variant.ram }} GB</td>
+                                    <td>{{ variant.storage }} GB</td>
+                                    <td>{{ variant.color }}</td>
+                                </tr>
+                                <script type="application/json" id="variant-images-{{ variant.id }}">
+                                    [
+                                        {% for image in variant.images.all %}
+                                            "{{ image.image.url }}"{% if not forloop.last %},{% endif %}
+                                        {% endfor %}
+                                    ]
+                                </script>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No variants available.</p>
+                {% endif %}
+
+                <button class="buy-now" onclick="addToWishlist({{ product.id }})">Add to Wishlist</button>
+                <button class="add-to-cart" onclick="addToCartWithSelectedVariant()">
+                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Add toast container to the top of the body
+        function createToastContainer() {
+            const toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.style.position = 'fixed';
+            toastContainer.style.top = '20px';
+            toastContainer.style.right = '20px';
+            toastContainer.style.zIndex = '1000';
+            document.body.appendChild(toastContainer);
+        }
+    
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                createToastContainer();
+                toastContainer = document.getElementById('toast-container');
+            }
+    
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
+            toast.style.color = 'white';
+            toast.style.padding = '15px';
+            toast.style.borderRadius = '5px';
+            toast.style.marginBottom = '10px';
+            toast.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.3s ease-in-out';
+    
+            toastContainer.appendChild(toast);
+    
+            setTimeout(() => { toast.style.opacity = '1'; }, 10);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => { 
+                    if (toastContainer.contains(toast)) {
+                        toastContainer.removeChild(toast); 
+                    }
+                }, 300);
+            }, 3000);
+        }
+    
+        document.getElementById('clearSearch')?.addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            window.location.href = '{% url "shop_page" %}';
+        });
+    
+        const searchInput = document.getElementById('searchInput');
+        const clearButton = document.getElementById('clearSearch');
+    
+        if (searchInput && clearButton) {
+            searchInput.addEventListener('input', function() {
+                clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+            });
+        }
+    
+        window.onload = function() {
+            if (searchInput && clearButton) {
+                clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+            }
+            loadInitialCounts();
+            const initialQuantity = parseInt(document.getElementById('stock-quantity')?.textContent || '0');
+            if (initialQuantity === 0) {
+                const addToCartBtn = document.querySelector('.add-to-cart');
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = true;
+                }
+            }
+        };
+    
+        function changeImage(src) {
+            const mainImg = document.getElementById("main-img");
+            if (mainImg) {
+                mainImg.src = src;
+            }
+        }
+
+        // Variant selection logic
+        let selectedVariantId = {% with first_variant=product.variants.first %}{{ first_variant.id|default:'null' }}{% endwith %};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const variantRows = document.querySelectorAll('.variant-row');
+            variantRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    const variantId = this.getAttribute('data-variant-id');
+                    const price = this.getAttribute('data-price');
+                    const stock = parseInt(this.getAttribute('data-stock'));
+                    const imagesJson = document.getElementById(`variant-images-${variantId}`).textContent;
+                    const images = JSON.parse(imagesJson);
+
+                    // Update selected variant
+                    selectedVariantId = variantId;
+
+                    // Update price
+                    document.getElementById('variant-price').textContent = `Price: ₹${price}`;
+
+                    // Update stock
+                    const stockStatus = document.getElementById('stock-status');
+                    if (stock > 0) {
+                        stockStatus.innerHTML = `<span class="in-stock">In Stock: <span id="stock-quantity">${stock}</span></span>`;
+                    } else {
+                        stockStatus.innerHTML = `<span class="out-of-stock">Out of Stock</span>`;
+                    }
+
+                    // Update images
+                    const mainImg = document.getElementById('main-img');
+                    const thumbnailContainer = document.querySelector('.thumbnail-images');
+                    if (images.length > 0) {
+                        mainImg.src = images[0];
+                        thumbnailContainer.innerHTML = '';
+                        images.forEach(src => {
+                            const img = document.createElement('img');
+                            img.src = src;
+                            img.alt = "{{ product.name }}";
+                            img.className = 'thumbnail';
+                            img.onclick = () => changeImage(src);
+                            thumbnailContainer.appendChild(img);
+                        });
+                    } else {
+                        mainImg.src = "{% static 'default-image.jpg' %}";
+                        thumbnailContainer.innerHTML = '';
+                    }
+
+                    // Highlight selected row
+                    variantRows.forEach(r => r.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // Auto-select first variant
+            const firstRow = document.querySelector('.variant-row');
+            if (firstRow) {
+                firstRow.click();
+            }
+        });
+
+        async function addToCartWithSelectedVariant() {
+    if (!selectedVariantId) {
+        showToast('Please select a variant first.', 'error');
+        return;
+    }
+
+    const button = document.querySelector('.add-to-cart');
+    if (!button) return;
+
+    button.disabled = true;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+    try {
+        const response = await fetch(`/add_to_cart_with_variant/${selectedVariantId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            credentials: 'same-origin'
+        });
+
+        // Handle non-JSON responses
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to add to cart');
+        }
+
+        // Get the product name from the selected variant row
+        const selectedRow = document.querySelector(`.variant-row[data-variant-id="${selectedVariantId}"]`);
+        let productName = "Product";
+        if (selectedRow) {
+            // Assuming the product name is in the first cell (adjust if needed)
+            productName = selectedRow.cells[0].textContent.trim(); 
+        }
+
+        // Custom messages based on response
+        let message = '';
+        if (data.status === 'max_quantity') {
+            message = `Cannot add more ${productName}. Stock limit reached.`;
+        } else if (data.is_new_item) {
+            message = `${productName} added to cart successfully!`;
+        } else {
+            message = `${productName} quantity increased to ${data.current_quantity || data.quantity}`;
+        }
+
+        showToast(message);
+        
+        // Update UI
+        if (data.cart_count !== undefined) {
+            updateCartCount(data.cart_count);
+        }
+        
+        if (data.stock !== undefined) {
+            updateStockDisplay(data.stock);
+            if (selectedRow) {
+                selectedRow.setAttribute('data-stock', data.stock);
+            }
+        }
+
+    } catch (error) {
+        console.error("Cart Error:", error);
+        showToast(error.message || 'Failed to add to cart. Please try again.', 'error');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+        
+        $(document).ajaxError(function(event, xhr, settings) {
+            if (xhr.status === 403) {
+                window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
+            }
+        });
+    
+        function addToWishlist(productId) {
+            fetch(`/add-to-wishlist/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message);
+                    fetchWishlistCount();
+                } else {
+                    showToast('Error adding to wishlist', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Something went wrong', 'error');
+            });
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+    
+        function addToCart(productId) {
+            console.log('Adding to cart, product ID:', productId);
+            const button = document.querySelector('.add-to-cart');
+            if (!button) return;
+            
+            button.disabled = true; // Disable button to prevent multiple clicks
+            
+            const url = `/add_to_cart/${productId}/`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Cart response:', data);
+                if (data.success) {
+                    // Show toast with the appropriate message
+                    const message = data.is_new_item 
+                        ? 'Product added to cart successfully' 
+                        : `Quantity increased to ${data.quantity || data.new_quantity}`;
+                    showToast(message);
+                    
+                    // Update cart count
+                    fetchCartCount();
+                    
+                    // Update stock if provided by backend
+                    if (data.stock !== undefined) {
+                        updateStockDisplay(data.stock);
+                    } else if (data.new_stock !== undefined) {
+                        updateStockDisplay(data.new_stock);
+                    }
+                } else {
+                    showToast(data.message || 'Failed to add product to cart', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Cart Error:', error);
+                showToast('Failed to add to cart. Please try again.', 'error');
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    button.disabled = false; // Re-enable button after a short delay
+                }, 500);
+            });
+        }
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            createToastContainer();
+            loadInitialCounts();
+            
+            // Update stock display
+            const stockQty = document.getElementById('stock-quantity');
+            if (stockQty) {
+                const quantity = parseInt(stockQty.textContent || '0');
+                if (quantity === 0) {
+                    const addToCartBtn = document.querySelector('.add-to-cart');
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = true;
+                    }
+                }
+            }
+        });
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainImage = document.getElementById('main-img');
+            const imageContainer = document.querySelector('.main-image');
+            
+            if (!mainImage || !imageContainer) return;
+        
+            function setupImageZoom() {
+                imageContainer.style.position = 'relative';
+                imageContainer.style.overflow = 'hidden';
+                
+                const lens = document.createElement('div');
+                lens.style.position = 'absolute';
+                lens.style.display = 'none';
+                lens.style.border = '1px solid rgba(0,0,0,0.2)';
+                lens.style.backgroundColor = 'rgba(255,255,255,0.2)';
+                lens.style.pointerEvents = 'none';
+                lens.style.zIndex = '10';
+                imageContainer.appendChild(lens);
+        
+                const zoomedImage = document.createElement('div');
+                zoomedImage.style.position = 'fixed';
+                zoomedImage.style.display = 'none';
+                zoomedImage.style.top = '50%';
+                zoomedImage.style.left = '50%';
+                zoomedImage.style.transform = 'translate(-50%, -50%)';
+                zoomedImage.style.width = '400px';
+                zoomedImage.style.height = '400px';
+                zoomedImage.style.border = '1px solid #ddd';
+                zoomedImage.style.overflow = 'hidden';
+                zoomedImage.style.backgroundColor = '#fff';
+                zoomedImage.style.zIndex = '1000';
+                zoomedImage.style.boxShadow = '0 0 20px rgba(0,0,0,0.1)';
+                document.body.appendChild(zoomedImage);
+        
+                const zoomImg = document.createElement('img');
+                zoomImg.src = mainImage.src;
+                zoomImg.style.position = 'absolute';
+                zoomImg.style.maxWidth = 'none';
+                zoomedImage.appendChild(zoomImg);
+        
+                imageContainer.addEventListener('mouseenter', function(e) {
+                    zoomImg.src = mainImage.src;
+                    lens.style.display = 'block';
+                    zoomedImage.style.display = 'block';
+                });
+        
+                imageContainer.addEventListener('mouseleave', function(e) {
+                    lens.style.display = 'none';
+                    zoomedImage.style.display = 'none';
+                });
+        
+                imageContainer.addEventListener('mousemove', function(e) {
+                    const rect = imageContainer.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+        
+                    lens.style.width = '100px';
+                    lens.style.height = '100px';
+                    lens.style.left = `${x - 50}px`;
+                    lens.style.top = `${y - 50}px`;
+        
+                    const imgWidth = mainImage.offsetWidth;
+                    const imgHeight = mainImage.offsetHeight;
+        
+                    const zoomRatioX = (zoomImg.naturalWidth / imgWidth);
+                    const zoomRatioY = (zoomImg.naturalHeight / imgHeight);
+        
+                    zoomImg.style.width = `${imgWidth * zoomRatioX}px`;
+                    zoomImg.style.height = `${imgHeight * zoomRatioY}px`;
+        
+                    zoomImg.style.left = `-${x * zoomRatioX - 50}px`;
+                    zoomImg.style.top = `-${y * zoomRatioY - 50}px`;
+                });
+        
+                const thumbnails = document.querySelectorAll('.thumbnail');
+                thumbnails.forEach(thumbnail => {
+                    thumbnail.addEventListener('click', function() {
+                        mainImage.src = this.src;
+                        zoomImg.src = this.src;
+                    });
+                });
+            }
+        
+            if (mainImage.complete) {
+                setupImageZoom();
+            } else {
+                mainImage.addEventListener('load', setupImageZoom);
+            }
+        });
+
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial cart count response:', data);
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                } else {
+                    console.log('No cart_count in initial response, setting to 0');
+                    updateCartCount(0);
+                }
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+        
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial wishlist count response:', data);
+                if (data.wishlist_count !== undefined && data.wishlist_count !== null) {
+                    updateWishlistCount(data.wishlist_count);
+                } else {
+                    console.log('No valid wishlist_count in initial response, setting to 0');
+                    updateWishlistCount(0);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading wishlist count:', error);
+                updateWishlistCount(0);
+            });
+        }
+
+        function fetchCartCount() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fetched cart count:', data);
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error fetching cart count:', error));
+        }
+
+        function fetchWishlistCount() {
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Fetched wishlist count:', data);
+                if (data.wishlist_count !== undefined) {
+                    updateWishlistCount(data.wishlist_count);
+                }
+            })
+            .catch(error => console.error('Error fetching wishlist count:', error));
+        }
+
+        function updateWishlistIcon(button, added) {
+            const icon = button.querySelector('i');
+            if (added) {
+                icon.classList.add('wishlist-added');
+            } else {
+                icon.classList.remove('wishlist-added');
+            }
+        }
+
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+            console.log('Updated cart count to:', count || '0');
+        }
+
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+            wishlistCountElement.style.display = 'inline-block';
+            console.log('Updated wishlist count to:', count || '0');
+        }
+    
+        document.addEventListener('DOMContentLoaded', createToastContainer);
+
+        // Updated stock display function
+        function updateStockDisplay(quantity) {
+            const stockStatus = document.getElementById('stock-status');
+            if (quantity > 0) {
+                stockStatus.innerHTML = `<span class="in-stock">In Stock: <span id="stock-quantity">${quantity}</span></span>`;
+                document.querySelector('.add-to-cart').disabled = false;
+            } else {
+                stockStatus.innerHTML = `<span class="out-of-stock">Out of Stock</span>`;
+                document.querySelector('.add-to-cart').disabled = true;
+            }
+        }
+
+        // Fetch current product stock
+        function fetchProductStock(productId) {
+            fetch(`/product/${productId}/`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateStockDisplay(data.stock || data.quantity); // Handle either 'stock' or 'quantity' from backend
+            })
+            .catch(error => {
+                console.error('Stock Fetch Error:', error);
+                showToast('Failed to fetch stock', 'error');
+            });
+        }
+
+        // Keep your original placeOrder and cancelOrder functions
+        function placeOrder(productId) {
+            fetch(`/place_order/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })  
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message);
+                    updateStockDisplay(data.new_quantity);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Order Error:', error);
+                showToast('Failed to place order', 'error');
+            });
+        }
+
+        function cancelOrder(orderId) {
+            fetch(`/cancel-order/${orderId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message);
+                    fetchProductStock({{ product.id }});
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Cancel Error:', error);
+                showToast('Failed to cancel order', 'error');
+            });
+        }
+
+        function placeOrderFromCheckout() {  // Triggered from checkout, not directly here
+            fetch('/place_order/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    payment_method: 'COD',  // Example, adjust as needed
+                    shipping_address: 1     // Example, adjust as needed
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Order placed successfully!');
+                    if (data.stock_updates) {
+                        updateStockDisplay(data.stock_updates[{{ product.id }}] || 0);
+                    }
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => showToast('Order placement failed', 'error'));
+        }
+        
+        function updateStockDisplay(stock) {
+            const stockStatus = document.getElementById('stock-status');
+            const addToCartBtn = document.querySelector('.add-to-cart');
+            
+            if (stock > 0) {
+                stockStatus.innerHTML = `<span class="in-stock">In Stock: <span id="stock-quantity">${stock}</span></span>`;
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = false;
+                }
+            } else {
+                stockStatus.innerHTML = `<span class="out-of-stock">Out of Stock</span>`;
+                if (addToCartBtn) {
+                    addToCartBtn.disabled = true;
+                }
+            }
+        }
+
+        function checkStockUpdates() {
+            fetch(`/product-stock/${productId}/`, {  // Add this endpoint if needed
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Updated stock:', data.stock);  // Debug output
+                updateStockDisplay(data.stock);
+            });
+        }
+
+        
+        setInterval(checkStockUpdates, 10000);
+        
+    </script>
+    
+    <style>
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    
+        .wishlist-count {
+            display: inline-block;
+            min-width: 10px;
+            text-align: center;
+        }
+    
+        .cart-count, .wishlist-count {
+            display: inline-block;
+            min-width: 16px;
+            height: 16px;
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            line-height: 16px;
+            text-align: center;
+            position: relative;
+            top: -8px;
+            right: 5px;
+            padding: 0 4px;
+        }
+    
+        .cart-count:empty, .wishlist-count:empty {
+            display: none;
+        }
+    
+        nav a {
+            position: relative;
+            margin: 0 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .variant-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .variant-row:hover {
+            background-color: #f5f5f5;
+        }
+        .variant-row.selected {
+            background-color: #e0e0e0;
+        }
+    </style>
+</body>
+</html>

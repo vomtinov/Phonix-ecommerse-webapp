@@ -1,0 +1,249 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details</title>
+    <link rel="stylesheet" href="{% static 'order_fulldetails.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Add the CSS styles for cart and wishlist counts */
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+        
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+        
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>Order #{{ order.id }}</h2>
+        <p><strong>Placed on:</strong> {{ order.created_at|date:"M d, Y" }}</p>
+        <p><strong>Total Price:</strong> ₹{{ order.total_price }}</p>
+        <p><strong>Status:</strong> {{ order.status }}</p>
+        {% if order.status == "Pending" or order.status == "Confirmed" or order.status == "Shipped" %}
+            <button id="cancel-order-btn" class="cancel-btn">Cancel Order</button>
+        {% endif %}
+
+        <!-- Order Items -->
+        <h3>Order Items:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Image</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order_item_data in order_items_with_images %}
+                <tr>
+                    <td>
+                        {{ order_item_data.product_name }}
+                        {% if order_item_data.variant_details %}
+                            <br>({{ order_item_data.variant_details }})
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if order_item_data.image %}
+                            <img src="{{ order_item_data.image.image.url }}" alt="{{ order_item_data.product_name }}" width="50">
+                        {% else %}
+                            <p>No Image</p>
+                        {% endif %}
+                    </td>
+                    <td>{{ order_item_data.item.quantity|default:"N/A" }}</td>
+                    <td>₹{{ order_item_data.item.price|floatformat:2|default:"0.00" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No items found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Order Summary -->
+        <div class="order-summary">
+            <p><strong>Subtotal:</strong> ₹{{ subtotal|default:0|floatformat:2 }}</p>
+            <p><strong>Shipping Fee:</strong> ₹{{ shipping_fee|default:0|floatformat:2 }}</p>
+            <p><strong>Grand Total:</strong> ₹{{ grand_total|default:0|floatformat:2 }}</p>
+        </div>
+        
+        <a href="{% url 'order_details' %}" class="back-btn">Back to Orders</a>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Clear search functionality
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            window.location.href = '{% url "home" %}';
+        });
+
+        // Dynamic visibility of the "Clear Search" button
+        const searchInput = document.getElementById('searchInput');
+        const clearButton = document.getElementById('clearSearch');
+
+        searchInput.addEventListener('input', function() {
+            clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+        });
+
+        // Load initial cart and wishlist counts
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial cart count response:', data);
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                } else {
+                    console.log('No cart_count in initial response, setting to 0');
+                    updateCartCount(0);
+                }
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+        
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial wishlist count response:', data);
+                if (data.wishlist_count !== undefined && data.wishlist_count !== null) {
+                    updateWishlistCount(data.wishlist_count);
+                } else {
+                    console.log('No valid wishlist_count in initial response, setting to 0');
+                    updateWishlistCount(0);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading wishlist count:', error);
+                updateWishlistCount(0);
+            });
+        }
+
+        // Update cart count in the UI
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+            console.log('Updated cart count to:', count || '0');
+        }
+
+        // Update wishlist count in the UI
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+            wishlistCountElement.style.display = 'inline-block'; // Ensure visibility
+            console.log('Updated wishlist count to:', count || '0');
+        }
+
+        // Load counts when the page loads
+        window.onload = function() {
+            clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+            loadInitialCounts();
+        };
+
+        // Cancel order functionality
+        $(document).ready(function() {
+            $("#cancel-order-btn").click(function() {
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "Do you want to cancel this order?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Yes, Cancel it!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Get CSRF token from the cookie
+                        var csrftoken = getCookie('csrftoken');
+    
+                        $.ajax({
+                            url: "{% url 'cancel_order' order.id %}",
+                            type: "POST",
+                            headers: { "X-CSRFToken": csrftoken }, // Include CSRF token in headers
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire("Cancelled!", "Your order has been cancelled.", "success").then(() => {
+                                        location.reload(); // Refresh page to show updated status
+                                    });
+                                } else {
+                                    Swal.fire("Error!", response.message, "error");
+                                }
+                            },
+                            error: function() {
+                                Swal.fire("Error!", "Something went wrong. Try again!", "error");
+                            }
+                        });
+                    }
+                });
+            });
+    
+            // Function to get CSRF token from cookies
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.startsWith(name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        });
+    </script>
+</body>
+</html>

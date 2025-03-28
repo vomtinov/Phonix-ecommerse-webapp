@@ -1,0 +1,405 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop</title>
+    <link rel="stylesheet" href="{% static 'home.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Sorting and Filtering Options -->
+        <div class="sort-options">
+            <label for="sort">Sort by:</label>
+            <select name="sort" id="sort" onchange="window.location.href='?sort=' + this.value + '&category={{ category|default:'' }}&brand={{ brand|default:'' }}'">
+                <option value="" {% if not sort %}selected{% endif %}>Default</option>
+                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                <option value="a_z" {% if sort == 'a_z' %}selected{% endif %}>A-Z</option>
+                <option value="z_a" {% if sort == 'z_a' %}selected{% endif %}>Z-A</option>
+            </select>
+
+            <label for="category" style="margin-left: 20px;">Category:</label>
+            <select name="category" id="category" onchange="window.location.href='?category=' + this.value + '&sort={{ sort|default:'' }}&brand={{ brand|default:'' }}'">
+                <option value="" {% if not category %}selected{% endif %}>All</option>
+                <option value="Mobile" {% if category == 'Mobile' %}selected{% endif %}>Mobile</option>
+                <option value="Laptop" {% if category == 'Laptop' %}selected{% endif %}>Laptop</option>
+            </select>
+
+            <label for="brand" style="margin-left: 20px;">Brand:</label>
+            <select name="brand" id="brand" onchange="window.location.href='?brand=' + this.value + '&sort={{ sort|default:'' }}&category={{ category|default:'' }}'">
+                <option value="" {% if not brand %}selected{% endif %}>All</option>
+                {% for brand_name in unique_brands %}
+                    <option value="{{ brand_name }}" {% if brand == brand_name %}selected{% endif %}>{{ brand_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Mobiles Section -->
+        <section class="products">
+            <h2>Mobiles</h2>
+            <div class="product-list">
+                {% if mobiles %}
+                    {% for mobile in mobiles %}
+                    <div class="product">
+                        <a href="{% url 'mobile_detail' mobile.id %}">
+                            {% with first_variant=mobile.variants.first %}
+                                {% if first_variant and first_variant.images.exists %}
+                                    <img src="{{ first_variant.images.first.image.url }}" alt="{{ mobile.name }}">
+                                {% else %}
+                                    <p>No images available</p>
+                                {% endif %}
+                                <h3>{{ mobile.name }}</h3>
+                            {% endwith %}
+                        </a>
+                        {% with first_variant=mobile.variants.first %}
+                            <p class="price">₹{{ first_variant.price|default:'N/A' }}</p>
+                        {% endwith %}
+                        <div class="product-details">
+                            {% if mobile.brand %}
+                                <p class="brand">{{ mobile.brand.name }}</p>
+                            {% endif %}
+                            {% if mobile.ram or mobile.storage %}
+                                <p class="specs">{{ mobile.ram }} | {{ mobile.storage }}</p>
+                            {% endif %}
+                            {% if mobile.description %}
+                                <p>{{ mobile.description|truncatewords:20 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="product-actions">
+                            <a href="{% url 'add_to_cart' mobile.id %}" class="action-btn"><i class="fas fa-shopping-cart"></i></a>
+                            <a href="{% url 'add_to_wishlist' mobile.id %}" class="action-btn"><i class="fas fa-heart"></i></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No mobiles available at the moment.</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Laptops Section -->
+        <section class="products">
+            <h2>Laptops</h2>
+            <div class="product-list">
+                {% if laptops %}
+                    {% for laptop in laptops %}
+                    <div class="product">
+                        <a href="{% url 'laptop_detail' laptop.id %}">
+                            {% with first_variant=laptop.variants.first %}
+                                {% if first_variant and first_variant.images.exists %}
+                                    <img src="{{ first_variant.images.first.image.url }}" alt="{{ laptop.name }}">
+                                {% else %}
+                                    <p>No images available</p>
+                                {% endif %}
+                                <h3>{{ laptop.name }}</h3>
+                            {% endwith %}
+                        </a>
+                        {% with first_variant=laptop.variants.first %}
+                            <p class="price">₹{{ first_variant.price|default:'N/A' }}</p>
+                        {% endwith %}
+                        <div class="product-details">
+                            {% if laptop.description %}
+                                <p>{{ laptop.description|truncatewords:20 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="product-actions">
+                            <a href="{% url 'add_to_cart' laptop.id %}" class="action-btn"><i class="fas fa-shopping-cart"></i></a>
+                            <a href="{% url 'add_to_wishlist' laptop.id %}" class="action-btn"><i class="fas fa-heart"></i></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No laptops available at the moment.</p>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Clear search functionality (unchanged)
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            window.location.href = '{% url "shop_page" %}';
+        });
+    
+        const searchInput = document.getElementById('searchInput');
+        const clearButton = document.getElementById('clearSearch');
+    
+        searchInput.addEventListener('input', function() {
+            clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+        });
+    
+        window.onload = function() {
+            clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+            loadInitialCounts();
+        };
+    
+        // Handle clicks
+        document.querySelectorAll('.product-actions a').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const url = this.getAttribute('href');
+                console.log('Clicked URL:', url);
+                const parts = url.split('/').filter(Boolean);
+                const productId = parts[parts.length - 1];
+                console.log('Extracted Product ID:', productId);
+                if (url.includes('add_to_cart')) {
+                    console.log('Calling addToCart for product:', productId);
+                    addToCart(productId, this);
+                } else if (url.includes('wishlist/add')) {
+                    console.log('Calling addToWishlist for product:', productId);
+                    addToWishlist(productId, this);
+                } else {
+                    console.log('Unknown action for URL:', url);
+                }
+            });
+        });
+    
+        // Toast notification (unchanged)
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 500);
+            }, 3000);
+        }
+    
+        // Add to Cart 
+        function addToCart(productId, button) {
+            fetch(`/add_to_cart/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message || 'Added to cart successfully!');
+                    if (data.cart_count !== undefined) {
+                        updateCartCount(data.cart_count);
+                    } else {
+                        fetchCartCount();
+                    }
+                } else {
+                    showToast(data.message || 'Failed to add to cart.');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                showToast('Something went wrong. Please try again.');
+            });
+        }
+    
+        // Add to Wishlist
+        function addToWishlist(productId, button) {
+            console.log('addToWishlist called with productId:', productId);
+            const requestBody = JSON.stringify({ product_id: productId });
+            console.log('Request body:', requestBody);
+    
+            fetch(`/wishlist/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: requestBody
+            })
+            .then(response => {
+                console.log('Wishlist response status:', response.status);
+                if (response.status === 302) {
+                    showToast('Please log in to add to wishlist.');
+                    window.location.href = '/login';
+                    return;
+                }
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(`HTTP error! Status: ${response.status}, Body: ${text}`); });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Wishlist response data:', data);
+                if (data.success) {
+                    const isAdded = data.message.includes('Added');
+                    showToast(data.message);
+                    updateWishlistIcon(button, isAdded);
+                    if (data.wishlist_count !== undefined) {
+                        updateWishlistCount(data.wishlist_count);
+                    } else {
+                        fetchWishlistCount();
+                    }
+                } else {
+                    showToast(data.message || 'Failed to update wishlist.');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to wishlist:', error);
+                showToast('Something went wrong. Please try again.');
+            });
+        }
+    
+        // Load initial counts 
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+    
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wishlist_count !== undefined) {
+                    updateWishlistCount(data.wishlist_count);
+                }
+            })
+            .catch(error => console.error('Error loading wishlist count:', error));
+        }
+    
+        // Fallback functions 
+        function fetchCartCount() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error fetching cart count:', error));
+        }
+    
+        function fetchWishlistCount() {
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wishlist_count !== undefined) {
+                    updateWishlistCount(data.wishlist_count);
+                }
+            })
+            .catch(error => console.error('Error fetching wishlist count:', error));
+        }
+    
+        // Update wishlist icon 
+        function updateWishlistIcon(button, added) {
+            const icon = button.querySelector('i');
+            if (added) {
+                icon.style.color = 'red';
+            } else {
+                icon.style.color = '';
+            }
+        }
+    
+        // Get CSRF token (unchanged, but optional since @csrf_exempt)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    
+        // Update counts 
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+        }
+    
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+        }
+    </script>     
+</body>
+</html>
+

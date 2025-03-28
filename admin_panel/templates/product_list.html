@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <link rel="stylesheet" href="{% static 'product_listt.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+    <div class="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">☰</button>
+        <h2>Products</h2>
+        <ul>
+            <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'users' %}">Users</a></li>
+            <li><a href="{% url 'category_list' %}">Category</a></li>
+            <li><a href="{% url 'add_category' %}">Add Category</a></li>
+            <li><a href="{% url 'brand_list' %}">Brand</a></li>
+            <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
+            <li><a href="{% url 'product_list' %}">Product</a></li>
+            <li><a href="{% url 'add_product' %}">Add Product</a></li>
+            <li><a href="">Coupon</a></li>
+            <li><a href="">Orders</a></li>
+            <li><a href="#">Offers</a></li>
+            <li><a href="">Return</a></li>
+            <li><a href="">Sales Report</a></li>
+            <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1>Product List</h1>
+        
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchTable()">
+        </div>
+
+        <!-- Product Table -->
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Brand</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    {% with variant=product.variants.first %}
+                        <tr>
+                            <td>{{ product.id }}</td>
+                            <td>
+                                {% if variant.images.first %}
+                                    <img src="{{ variant.images.first.image.url }}" alt="{{ product.name }}">
+                                {% else %}
+                                    <span>No Image</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>{{ product.brand.name }}</td>
+                            <td>₹{{ variant.price|floatformat:2 }}</td>
+                            <td>{{ variant.stock }}</td>
+                            <td>
+                                <button class="status-btn {% if product.status %}active-btn{% else %}inactive-btn{% endif %}"
+                                        onclick="toggleStatus({{ product.id }}, {{ product.status|lower }})">
+                                    {% if product.status %}Active{% else %}Inactive{% endif %}
+                                </button>
+                            </td>
+                            <td>
+                                <button class="action-btn edit-btn" onclick="editProduct({{ product.id }})">Edit</button>
+                                <button class="action-btn delete-btn" onclick="deleteProduct({{ product.id }})">Delete</button>
+                            </td>
+                        </tr>
+                    {% endwith %}
+                {% empty %}
+                    <tr>
+                        <td colspan="9">No products found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Search functionality
+        function searchTable() {
+            let input = document.getElementById("searchInput").value.toLowerCase();
+            let table = document.getElementById("productTable");
+            let tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName("td");
+                let found = false;
+                for (let j = 0; j < td.length; j++) {
+                    if (td[j] && td[j].innerText.toLowerCase().indexOf(input) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+
+        // Toggle product status
+        function toggleStatus(productId, currentStatus) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Do you want to ${currentStatus ? 'deactivate' : 'activate'} this product?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'No'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/admin/toggle-product-status/${productId}/`,
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ status: !currentStatus }),
+                        headers: { 
+                            'X-CSRFToken': $('meta[name="csrf-token"]').attr('content'),
+                            'Content-Type': 'application/json'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                Swal.fire('Error', response.error || 'Something went wrong!', 'error');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Full error details:", xhr.responseText);
+                            Swal.fire('Error', 'Something went wrong: ' + (xhr.responseJSON?.error || error), 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Edit product
+        function editProduct(productId) {
+            window.location.href = `/products/edit/${productId}/`;
+        }
+
+        // Delete product
+        function deleteProduct(productId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This will soft delete the product!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/admin/delete_product/${productId}/`,
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': $('meta[name="csrf-token"]').attr('content') },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire('Deleted!', 'Product has been deleted.', 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', response.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Something went wrong!', 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Sidebar toggle (for responsiveness, if needed)
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.content').style.marginLeft = 
+                document.querySelector('.sidebar').classList.contains('collapsed') ? '0' : '250px';
+        }
+    </script>
+</body>
+</html>

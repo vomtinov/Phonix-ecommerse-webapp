@@ -1,0 +1,350 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist</title>
+    <link rel="stylesheet" href="{% static 'cart.css' %}?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Toast Notification Styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 250px;
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Cart and Wishlist Count Styles (Copied from cart.html) */
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+
+        /* Fix for clickable nav in wishlist */
+        header nav {
+            position: relative;
+            z-index: 100; /* Ensure nav is above other elements */
+        }
+
+        header .search-bar {
+            z-index: 50; /* Ensure search bar doesn’t overlap nav */
+        }
+
+        .dropdown-content {
+            z-index: 200; /* Ensure dropdown menu is above everything */
+        }
+    </style>
+</head>
+<body>
+    {% csrf_token %}
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+        
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+        
+        <nav>
+            <a href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a>
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="cart-container">
+        <h2>Your Wishlist</h2>
+    
+        {% if wishlist_items %}
+            <div class="wishlist-grid">
+                {% for item in wishlist_items %}
+                    <div class="wishlist-item" id="wishlist-item-{{ item.id }}">
+                        <div class="wishlist-item-image">
+                            {% with first_variant=item.product.variants.first %}
+                                {% if first_variant and first_variant.images.exists %}
+                                    <img src="{{ first_variant.images.first.image.url }}" alt="{{ item.product.name }}">
+                                {% else %}
+                                    <img src="{% static 'default-image.jpg' %}" alt="No image available">
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="wishlist-item-details">
+                            <h3>
+                                {% if item.product.category.name == 'mobile' %}
+                                    <a href="{% url 'mobile_detail' item.product.id %}">{{ item.product.name }}</a>
+                                {% elif item.product.category.name == 'laptop' %}
+                                    <a href="{% url 'laptop_detail' item.product.id %}">{{ item.product.name }}</a>
+                                {% else %}
+                                    {{ item.product.name }}
+                                {% endif %}
+                            </h3>
+                            {% with first_variant=item.product.variants.first %}
+                                <p class="price">Price: <span>₹{{ first_variant.price|default:'N/A' }}</span></p>
+                                <p class="status">Status: 
+                                    {% if first_variant and first_variant.stock > 0 %}
+                                        <span class="in-stock">In Stock</span>
+                                    {% else %}
+                                        <span class="out-stock">Out of Stock</span>
+                                    {% endif %}
+                                </p>
+                            {% endwith %}
+                            <div class="wishlist-actions">
+                                <button class="move-to-cart-btn" onclick="addToCart({{ item.product.id }}, {{ item.id }})">
+                                    <i class="fas fa-shopping-cart"></i> Move to Cart
+                                </button>
+                                <button class="remove-btn" onclick="removeFromWishlist({{ item.id }})">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-wishlist">
+                <p>Your wishlist is empty.</p>
+                <a href="{% url 'shop_page' %}" class="shop-now-btn">Shop Now</a>
+            </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // JavaScript remains unchanged except for addToCart and a new checkWishlistEmpty function
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wishlist_count !== undefined) {
+                    updateWishlistCount(data.wishlist_count);
+                }
+            })
+            .catch(error => console.error('Error loading wishlist count:', error));
+        }
+
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+        }
+
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+        }
+
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            window.location.href = '{% url "shop_page" %}';
+        });
+
+        const searchInput = document.getElementById('searchInput');
+        const clearButton = document.getElementById('clearSearch');
+
+        searchInput.addEventListener('input', function() {
+            clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+        });
+
+        window.onload = function() {
+            clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+            loadInitialCounts();
+        };
+
+        function showToast(message, duration = 3000) {
+            console.log('Showing toast with message:', message);
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, duration);
+            } else {
+                console.error('Toast element not found');
+            }
+        }
+
+        // New function to check and update wishlist UI
+        function checkWishlistEmpty() {
+            const wishlistGrid = document.querySelector('.wishlist-grid');
+            const emptyWishlist = document.querySelector('.empty-wishlist');
+            const wishlistItems = document.querySelectorAll('.wishlist-item');
+
+            if (wishlistItems.length === 0 && wishlistGrid) {
+                // Replace wishlist-grid with empty-wishlist
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-wishlist';
+                emptyDiv.innerHTML = '<p>Your wishlist is empty.</p><a href="{% url "shop_page" %}" class="shop-now-btn">Shop Now</a>';
+                wishlistGrid.parentNode.replaceChild(emptyDiv, wishlistGrid);
+            }
+        }
+
+        // Updated addToCart function
+        function addToCart(productId, wishlistId) {
+            console.log('Adding to cart, product ID:', productId, 'wishlist ID:', wishlistId);
+            console.log('CSRF Token:', getCookie("csrftoken"));
+
+            fetch(`/add_to_cart/${productId}/`, {
+                method: "POST",
+                headers: { 
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: JSON.stringify({ wishlist_id: wishlistId })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                if (response.ok) {
+                    return response.text().then(text => {
+                        console.log('Raw response body:', text);
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            return { success: true, message: 'Added to cart successfully' };
+                        }
+                    });
+                } else {
+                    throw new Error(`Request failed with status: ${response.status}`);
+                }
+            })
+            .then(data => {
+                console.log('Processed response data:', data);
+                if (data.success) {
+                    showToast(data.message || 'Added to cart successfully');
+                    // Remove item from wishlist UI
+                    const itemElement = document.getElementById(`wishlist-item-${wishlistId}`);
+                    if (itemElement) {
+                        itemElement.remove();
+                    }
+                    // Update cart count
+                    if (data.cart_count !== undefined) {
+                        updateCartCount(data.cart_count);
+                    } else {
+                        const currentCount = parseInt(document.querySelector('.cart-count').textContent) || 0;
+                        updateCartCount(currentCount + 1);
+                    }
+                    // Update wishlist count
+                    if (data.wishlist_count !== undefined) {
+                        updateWishlistCount(data.wishlist_count);
+                    } else {
+                        const currentWishlistCount = parseInt(document.querySelector('.wishlist-count').textContent) || 0;
+                        updateWishlistCount(currentWishlistCount - 1);
+                    }
+                    // Check if wishlist is empty and update UI
+                    checkWishlistEmpty();
+                    if (data.redirect === 'cart') {
+                        window.location.href = "{% url 'cart' %}";
+                    }
+                } else {
+                    showToast(data.message || 'Failed to add to cart');
+                }
+            })
+            .catch(error => {
+                console.error('Error details:', error);
+                showToast('An error occurred while adding to cart. Please try again.');
+            });
+        }
+
+        function removeFromWishlist(wishlistId) {
+            const itemElement = document.getElementById(`wishlist-item-${wishlistId}`);
+            fetch(`/wishlist/remove/${wishlistId}/`, {
+                method: "POST",
+                headers: { "X-CSRFToken": getCookie("csrftoken") }
+            })
+            .then(response => {
+                console.log('Remove response status:', response.status);
+                if (!response.ok) throw new Error('Failed to remove item');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Remove response data:', data);
+                if (data.success) {
+                    if (itemElement) {
+                        itemElement.remove();
+                    }
+                    showToast('Item removed from wishlist successfully');
+                    if (data.wishlist_count !== undefined) {
+                        updateWishlistCount(data.wishlist_count);
+                    } else {
+                        loadInitialCounts();
+                    }
+                    // Check if wishlist is empty after removal
+                    checkWishlistEmpty();
+                } else {
+                    showToast(data.message || 'Failed to remove item');
+                }
+            })
+            .catch(error => {
+                console.error('Remove error:', error);
+                showToast('An error occurred while removing the item');
+            });
+        }
+    </script>
+</body>
+</html>

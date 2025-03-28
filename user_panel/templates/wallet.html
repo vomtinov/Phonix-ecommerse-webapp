@@ -1,0 +1,399 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet</title>
+    <link rel="stylesheet" href="{% static 'account_detail.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            display: flex;
+        }
+        .sidebar {
+            width: 250px;
+            margin-right: 20px;
+        }
+        .wallet-header {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .wallet-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .balance {
+            font-size: 32px;
+            color: #28a745;
+            margin: 10px 0;
+        }
+        .add-money-form {
+            margin-top: 20px;
+        }
+        .add-money-form input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .add-money-form button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .add-money-form button:hover {
+            background-color: #0056b3;
+        }
+        .transactions {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+        }
+        .transactions h3 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .transaction-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .transaction-item {
+            padding: 15px 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        .transaction-details {
+            flex-grow: 1;
+        }
+        .transaction-date {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .transaction-description {
+            font-size: 16px;
+        }
+        .product-details {
+            margin-top: 5px;
+            padding-left: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+        .product-item {
+            margin: 5px 0;
+        }
+        .order-link {
+            margin-top: 5px;
+        }
+        .order-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .order-link a:hover {
+            text-decoration: underline;
+        }
+        .credit {
+            color: #28a745;
+            font-weight: 500;
+        }
+        .debit {
+            color: #dc3545;
+            font-weight: 500;
+        }
+        .refund-title {
+            color: #28a745;
+            font-weight: 500;
+        }
+        .transaction-amount {
+            margin-left: 20px;
+            font-size: 16px;
+            min-width: 100px;
+            text-align: right;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .toast {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+        <nav>
+            <a href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+            <a href="{% url 'wishlist' %}"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a>
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <aside class="sidebar">
+            <ul>
+                <li><a href="{% url 'account_profile' %}">Account Overview</a></li>
+                <li><a href="{% url 'order_details' %}">Order Details</a></li>
+                <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
+                <li><a href="/wallet">Wallet</a></li>
+                <li><a href="/wishlist">Wishlist</a></li>
+                <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
+            </ul>
+        </aside>
+        <div style="flex-grow: 1;">
+            <div class="wallet-header">
+                <h2>My Wallet</h2>
+                <div class="balance">₹{{ wallet.balance|floatformat:2 }}</div>
+                <form class="add-money-form" id="addMoneyForm" action="{% url 'add_to_wallet' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="number" name="amount" placeholder="Enter amount" min="1" step="0.01" required>
+                    <button type="submit">Add Money</button>
+                </form>
+            </div>
+            <div class="transactions">
+                <h3>Transaction History</h3>
+                {% if transactions %}
+                    <ul class="transaction-list">
+                        {% for transaction in transactions %}
+                            <li class="transaction-item">
+                                <div class="transaction-details">
+                                    <div class="transaction-date">{{ transaction.created_at|date:"d M Y, H:i" }}</div>
+                                    <div class="transaction-description">
+                                        {% if transaction.order and transaction.order.status == 'Returned' and transaction.transaction_type == 'CREDIT' %}
+                                            <div class="refund-title">Refund for Order #{{ transaction.order.id }}</div>
+                                            <div class="product-details">
+                                                {% for item in transaction.order.items.all %}
+                                                    <div class="product-item">
+                                                        {{ item.product.name }}
+                                                        {% if item.variant %}
+                                                            ({{ item.variant.ram }}/{{ item.variant.storage }}/{{ item.variant.color }})
+                                                        {% endif %}
+                                                        × {{ item.quantity }}
+                                                        {% if item.price %} - ₹{{ item.get_total_price|floatformat:2 }}{% endif %}
+                                                    </div>
+                                                {% empty %}
+                                                    <div class="no-items">No product details available</div>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="order-link">
+                                                <a href="{% url 'order_detail' transaction.order.id %}">View Order Details</a>
+                                            </div>
+                                        {% else %}
+                                            <div>{{ transaction.description }}</div>
+                                            {% if transaction.order %}
+                                                <div class="order-link">
+                                                    <a href="{% url 'order_detail' transaction.order.id %}">View Order #{{ transaction.order.id }}</a>
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="transaction-amount {% if transaction.transaction_type == 'CREDIT' %}credit{% else %}debit{% endif %}">
+                                    {% if transaction.transaction_type == 'CREDIT' %}+{% else %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No transactions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="toast-container" id="toastContainer"></div>
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+    <script>
+        let searchInput = document.getElementById("searchInput");
+        let clearSearch = document.getElementById("clearSearch");
+        searchInput.addEventListener("input", function () {
+            clearSearch.style.display = searchInput.value.trim() !== "" ? "inline-block" : "none";
+        });
+        clearSearch.addEventListener("click", function () {
+            searchInput.value = "";
+            clearSearch.style.display = "none";
+        });
+
+        function showToast(message) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.classList.add('toast');
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        document.getElementById('addMoneyForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = this;
+            const amount = form.querySelector('input[name="amount"]').value;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector('.balance').textContent = `₹${data.new_balance}`;
+                    const transactionList = document.querySelector('.transaction-list') || document.createElement('ul');
+                    if (!transactionList.classList.contains('transaction-list')) {
+                        transactionList.classList.add('transaction-list');
+                        document.querySelector('.transactions').appendChild(transactionList);
+                        document.querySelector('.transactions p')?.remove();
+                    }
+                    const newTransaction = document.createElement('li');
+                    newTransaction.classList.add('transaction-item');
+                    newTransaction.innerHTML = `
+                        <div class="transaction-details">
+                            <div class="transaction-date">${new Date().toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                            <div class="transaction-description">Funds added to wallet</div>
+                        </div>
+                        <div class="transaction-amount credit">+₹${parseFloat(amount).toFixed(2)}</div>
+                    `;
+                    transactionList.insertBefore(newTransaction, transactionList.firstChild);
+                    showToast('Funds added successfully!');
+                    form.reset();
+                } else {
+                    showToast(data.message || 'Failed to add funds.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while adding funds.');
+            });
+        });
+
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial cart count response:', data);
+                updateCartCount(data.cart_count !== undefined ? data.cart_count : 0);
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Initial wishlist count response:', data);
+                updateWishlistCount(data.wishlist_count !== undefined && data.wishlist_count !== null ? data.wishlist_count : 0);
+            })
+            .catch(error => {
+                console.error('Error loading wishlist count:', error);
+                updateWishlistCount(0);
+            });
+        }
+
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+            console.log('Updated cart count to:', count || '0');
+        }
+
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+            wishlistCountElement.style.display = 'inline-block';
+            console.log('Updated wishlist count to:', count || '0');
+        }
+
+        loadInitialCounts();
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

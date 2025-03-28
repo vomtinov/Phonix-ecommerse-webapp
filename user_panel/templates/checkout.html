@@ -1,0 +1,435 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Phonix</title>
+    <link rel="stylesheet" href="{% static 'checkoutt.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            color: #333333;
+            font-family: 'Poppins', sans-serif;
+        }
+        .checkout-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f5f5f5; /* Test color */
+        }
+
+        /* Add count styles from cart.html */
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <h2 class="logo"><a href="/">Phonix</a></h2>
+            <h2 class="shop-link"><a href="{% url 'shop_page' %}">Shop</a></h2>
+            <div class="search-bar">
+                <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                    <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                    <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+                    <button type="button" id="clearSearch" class="clear-btn" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </form>
+            </div>
+            <nav class="nav">
+                <a href="{% url 'cart' %}" class="nav-icon"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+                <a href="/wishlist" class="nav-icon"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+                <div class="dropdown">
+                    <button class="dropbtn"><i class="fas fa-user"></i> Account</button>
+                    <div class="dropdown-content">
+                        <a href="{% url 'account_profile' %}">Profile</a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="checkout-container">
+        <div class="checkout-wrapper">
+            <div class="checkout-left">
+                <!-- Cart Items -->
+                <section class="cart-section section-card">
+                    <h2>Your Cart</h2>
+                    {% if cart_items %}
+                        <div class="cart-items">
+                            {% for item in cart_items %}
+                                <div class="cart-item">
+                                    <div class="cart-item-image">
+                                        {% if item.variant.images.exists %}
+                                            {% with first_image=item.variant.images.first %}
+                                                <img src="{{ first_image.image.url }}" alt="{{ item.product.name }}">
+                                            {% endwith %}
+                                        {% else %}
+                                            <img src="{% static 'images/placeholder.png' %}" alt="No image available">
+                                        {% endif %}
+                                    </div>
+                                    <div class="cart-item-details">
+                                        <h3>{{ item.product.name }} ({{ item.variant.ram }}GB/{{ item.variant.storage }}GB/{{ item.variant.color }})</h3>
+                                        <p class="price">₹{{ item.variant.price }}</p>
+                                        <p class="quantity">Qty: {{ item.quantity }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <p class="total-items">Total Items: {{ cart_items.count }}</p>
+                    {% else %}
+                        <p class="empty-cart">Your cart is empty 😞</p>
+                    {% endif %}
+                </section>
+
+                <!-- Payment Method -->
+                <section class="payment-section section-card">
+                    <h2>Payment Method</h2>
+                    <div class="payment-option">
+                        <label class="payment-label">
+                            <input type="radio" id="cod" name="payment_method" value="cod" checked>
+                            <span>Cash on Delivery</span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Shipping Address -->
+                <section class="address-section section-card">
+                    <h2>Shipping Address</h2>
+                    <div id="address-list" class="address-list">
+                        {% if addresses %}
+                            {% for address in addresses %}
+                                <div class="address-item">
+                                    <input type="radio" id="address_{{ address.id }}" name="shipping_address" value="{{ address.id }}" {% if forloop.first %}checked{% endif %}>
+                                    <label for="address_{{ address.id }}" class="address-label">
+                                        <p class="address-name">{{ address.name }}</p>
+                                        <p>{{ address.city }}, {{ address.district }}, {{ address.state }} - {{ address.pincode }}</p>
+                                        <p>Phone: {{ address.phone }}</p>
+                                        {% if address.landmark %}
+                                            <p>Landmark: {{ address.landmark }}</p>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="no-address">No addresses available. Add one below!</p>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="add-address-btn" id="openAddressModal"><i class="fas fa-plus"></i> Add New Address</button>
+                </section>
+            </div>
+
+            <!-- Order Summary -->
+            <aside class="order-summary section-card">
+                <h2>Order Summary</h2>
+                <div class="summary-details">
+                    <p>Subtotal <span>₹{{ subtotal }}</span></p>
+                    <p>Delivery Charges <span>₹{{ delivery_charge }}</span></p>
+                    <hr>
+                    <p class="total">Total <span>₹{{ total_price }}</span></p>
+                </div>
+                <button class="place-order-btn" id="placeOrderBtn">Place Order Now</button>
+            </aside>
+        </div>
+
+        <!-- Address Modal -->
+        <div id="addressModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Address</h2>
+                    <span class="close">×</span>
+                </div>
+                <form id="addAddressForm" class="address-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" required placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" required placeholder="Enter city">
+                    </div>
+                    <div class="form-group">
+                        <label for="district">District</label>
+                        <input type="text" id="district" name="district" required placeholder="Enter district">
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <input type="text" id="state" name="state" required placeholder="Enter state">
+                    </div>
+                    <div class="form-group">
+                        <label for="pincode">Pincode</label>
+                        <input type="text" id="pincode" name="pincode" required placeholder="Enter pincode">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" required placeholder="Enter phone number">
+                    </div>
+                    <div class="form-group">
+                        <label for="landmark">Landmark (optional)</label>
+                        <input type="text" id="landmark" name="landmark" placeholder="Enter landmark">
+                    </div>
+                    <div class="form-group">
+                        <label for="alternative_phone">Alternative Phone (optional)</label>
+                        <input type="text" id="alternative_phone" name="alternative_phone" placeholder="Enter alternative phone">
+                    </div>
+                    <button type="submit" class="save-address-btn">Save Address</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="toast-container"></div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Script Loaded");
+        
+            // Search bar functionality
+            const searchInput = document.getElementById('searchInput');
+            const clearButton = document.getElementById('clearSearch');
+        
+            if (clearButton) {
+                clearButton.addEventListener('click', function() {
+                    searchInput.value = '';
+                    window.location.href = '{% url "checkout" %}';
+                });
+            }
+        
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+                });
+        
+                if (searchInput.value.trim()) {
+                    clearButton.style.display = 'inline-block';
+                }
+            }
+        
+            // Modal functionality
+            const modal = document.getElementById("addressModal");
+            const openModalBtn = document.getElementById("openAddressModal");
+            const closeModalBtn = document.querySelector(".modal .close");
+        
+            if (openModalBtn && modal) {
+                openModalBtn.addEventListener("click", function () {
+                    console.log("Opening Modal");
+                    modal.style.display = "block";
+                    document.body.classList.add("modal-open");
+                });
+            }
+        
+            if (closeModalBtn && modal) {
+                closeModalBtn.addEventListener("click", function () {
+                    console.log("Closing Modal");
+                    modal.style.display = "none";
+                    document.body.classList.remove("modal-open");
+                });
+            }
+        
+            window.addEventListener("click", function (event) {
+                if (event.target === modal) {
+                    console.log("Closing Modal on Outside Click");
+                    modal.style.display = "none";
+                    document.body.classList.remove("modal-open");
+                }
+            });
+        
+            // Toast notification function
+            function showToast(message, type = 'success') {
+                const toastContainer = document.getElementById('toast-container');
+                if (!toastContainer) return;
+        
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <i class="${type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'}"></i> 
+                    ${message}
+                `;
+                toastContainer.appendChild(toast);
+        
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 100);
+        
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 500);
+                }, 3000);
+            }
+        
+            // Handle Add Address Form Submission
+            document.getElementById('addAddressForm')?.addEventListener('submit', function(event) {
+                event.preventDefault();
+        
+                const formData = new FormData(this);
+        
+                fetch("{% url 'add_address' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const addressList = document.getElementById('address-list');
+                        const newAddress = document.createElement('div');
+                        newAddress.className = 'address-item animate__fadeIn';
+                        newAddress.innerHTML = `
+                            <input type="radio" id="address_${data.address_id}" name="shipping_address" value="${data.address_id}" checked>
+                            <label for="address_${data.address_id}" class="address-label">
+                                <p class="address-name">${formData.get('name')}</p>
+                                <p>${formData.get('city')}, ${formData.get('district')}, ${formData.get('state')} - ${formData.get('pincode')}</p>
+                                <p>Phone: ${formData.get('phone')}</p>
+                                ${formData.get('landmark') ? `<p>Landmark: ${formData.get('landmark')}</p>` : ''}
+                            </label>
+                        `;
+                        addressList.appendChild(newAddress);
+                        showToast('Address added successfully!', 'success');
+                        modal.style.display = "none";
+                        document.body.classList.remove("modal-open");
+                    } else {
+                        showToast('Failed to add address.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    showToast('Error adding address.', 'error');
+                });
+            });
+        
+            // Handle Place Order
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            if (placeOrderBtn) {
+                placeOrderBtn.addEventListener('click', function() {
+                    const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value;
+                    const shippingAddress = document.querySelector('input[name="shipping_address"]:checked')?.value;
+
+                    if (!shippingAddress) {
+                        showToast('Please select a shipping address.', 'error');
+                        return;
+                    }
+
+                    if (!paymentMethod) {
+                        showToast('Please select a payment method.', 'error');
+                        return;
+                    }
+
+                    fetch('{% url "place_order" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                        },
+                        body: JSON.stringify({
+                            payment_method: paymentMethod,
+                            shipping_address: shippingAddress,
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = `/order-success/${data.order_id}/`;
+                        } else {
+                            let errorMessage = 'Unable to place order';
+                            
+                            // If detailed stock information is available
+                            if (data.details) {
+                                errorMessage = 'Insufficient stock for:\n';
+                                data.details.forEach(item => {
+                                    errorMessage += `${item.name}: Requested ${item.requested}, Available ${item.available}\n`;
+                                });
+                            }
+                            
+                            showToast(errorMessage, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch Error:', error);
+                        showToast(`Error: ${error.message}`, 'error');
+                    });
+                });
+            }
+
+            // Load initial counts for cart and wishlist
+            function loadInitialCounts() {
+                fetch('/get_cart_count/', {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.cart_count !== undefined) {
+                        updateCartCount(data.cart_count);
+                    }
+                })
+                .catch(error => console.error('Error loading cart count:', error));
+
+                fetch('/get_wishlist_count/', {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.wishlist_count !== undefined) {
+                        updateWishlistCount(data.wishlist_count);
+                    }
+                })
+                .catch(error => console.error('Error loading wishlist count:', error));
+            }
+
+            // Update cart count
+            function updateCartCount(count) {
+                const cartCountElement = document.querySelector('.cart-count');
+                cartCountElement.textContent = count || '0';
+            }
+
+            // Update wishlist count
+            function updateWishlistCount(count) {
+                const wishlistCountElement = document.querySelector('.wishlist-count');
+                wishlistCountElement.textContent = count || '0';
+            }
+
+            // Get CSRF token (for future AJAX if needed)
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Load counts on page load
+            loadInitialCounts();
+        });
+    </script>
+</body>
+</html>

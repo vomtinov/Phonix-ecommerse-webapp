@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonix - Laptops</title>
+    <link rel="stylesheet" href="{% static 'home.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    
+    <header>
+        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="/mobiles">Mobiles</a></h2>
+        <h2><a href="/laptops">Laptops</a></h2>
+        
+        <div class="search-bar">
+            <form action="/search/" method="GET">
+                <input type="text" name="query" placeholder="Search products...">
+                <button type="submit"><i class="fas fa-search"></i></button>
+            </form>
+        </div>
+        
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i></a>
+            
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="sort-options">
+            <label for="sort">Sort by:</label>
+            <select name="sort" id="sort" onchange="window.location.href='?sort=' + this.value">
+                <option value="" {% if not sort %}selected{% endif %}>Default</option>
+                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                <option value="a_z" {% if sort == 'a_z' %}selected{% endif %}>A-Z</option>
+                <option value="z_a" {% if sort == 'z_a' %}selected{% endif %}>Z-A</option>
+                
+            </select>
+        </div>
+
+        <section class="products">
+            <h2>Featured Laptops</h2>
+            <div class="product-list">
+                {% if laptops %}
+                    {% for laptop in laptops %}
+                    <div class="product">
+                        {% if laptop.image %}
+                            <img src="{{ laptop.image.url }}" alt="{{ laptop.name }}">
+                        {% else %}
+                            <img src="{% static 'images/placeholder.png' %}" alt="No image available">
+                        {% endif %}
+                        <h3>{{ laptop.name }}</h3>
+                        <p class="price">₹{{ laptop.price }}</p>
+                        <div class="product-details">
+                            {% if laptop.description %}
+                                <p>{{ laptop.description|truncatewords:20 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-products">No laptops available at the moment.</p>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>

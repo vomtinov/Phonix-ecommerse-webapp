@@ -1,0 +1,228 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="{% static 'shop.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Add the CSS for cart and wishlist counts from shop.html */
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+        
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+        
+        <nav>
+            <!-- Modified to include count spans -->
+            <a href="/cart"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Sorting and Filtering Options -->
+        <div class="sort-options">
+            <label for="sort">Sort by:</label>
+            <select name="sort" id="sort" onchange="window.location.href='?sort=' + this.value + '&category={{ category|default:'' }}&brand={{ brand|default:'' }}&query={{ query|default:'' }}'">
+                <option value="" {% if not sort %}selected{% endif %}>Default</option>
+                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                <option value="a_z" {% if sort == 'a_z' %}selected{% endif %}>A-Z</option>
+                <option value="z_a" {% if sort == 'z_a' %}selected{% endif %}>Z-A</option>
+            </select>
+
+            <label for="category" style="margin-left: 20px;">Category:</label>
+            <select name="category" id="category" onchange="window.location.href='?category=' + this.value + '&sort={{ sort|default:'' }}&brand={{ brand|default:'' }}&query={{ query|default:'' }}'">
+                <option value="" {% if not category %}selected{% endif %}>All</option>
+                <option value="Mobile" {% if category == 'Mobile' %}selected{% endif %}>Mobile</option>
+                <option value="Laptop" {% if category == 'Laptop' %}selected{% endif %}>Laptop</option>
+            </select>
+
+            <label for="brand" style="margin-left: 20px;">Brand:</label>
+            <select name="brand" id="brand" onchange="window.location.href='?brand=' + this.value + '&sort={{ sort|default:'' }}&category={{ category|default:'' }}&query={{ query|default:'' }}'">
+                <option value="" {% if not brand %}selected{% endif %}>All</option>
+                {% for brand_name in unique_brands %}
+                    <option value="{{ brand_name }}" {% if brand == brand_name %}selected{% endif %}>{{ brand_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if query %}
+            <h2>Search Results for "{{ query }}"</h2>
+
+            <!-- Mobiles Section -->
+            <section class="products">
+                <h2>Mobiles</h2>
+                <div class="product-list">
+                    {% if mobiles %}
+                        {% for mobile in mobiles %}
+                        <div class="product">
+                            <a href="{% url 'mobile_detail' mobile.id %}">
+                                {% with mobile.images.first as first_image %}
+                                    {% if first_image %}
+                                        <img src="{{ first_image.image.url }}" alt="{{ mobile.name }}">
+                                    {% else %}
+                                        <img src="{% static 'images/placeholder.png' %}" alt="No Image Available">
+                                    {% endif %}
+                                {% endwith %}
+                                <h3>{{ mobile.name }}</h3>
+                            </a>
+                            <p class="price">₹{{ mobile.price }}</p>
+                            <div class="product-details">
+                                {% if mobile.brand %}
+                                    <p class="brand">{{ mobile.brand.name }}</p>
+                                {% endif %}
+                                {% if mobile.ram or mobile.storage %}
+                                    <p class="specs">{{ mobile.ram }} | {{ mobile.storage }}</p>
+                                {% endif %}
+                                {% if mobile.description %}
+                                    <p>{{ mobile.description|truncatewords:20 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="product-actions">
+                                <a href="{% url 'add_to_cart' mobile.id %}" class="action-btn"><i class="fas fa-shopping-cart"></i></a>
+                                <a href="{% url 'add_to_wishlist' mobile.id %}" class="action-btn"><i class="fas fa-heart"></i></a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-products">No mobile products found.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Laptops Section -->
+            <section class="products">
+                <h2>Laptops</h2>
+                <div class="product-list">
+                    {% if laptops %}
+                        {% for laptop in laptops %}
+                        <div class="product">
+                            <a href="{% url 'laptop_detail' laptop.id %}">
+                                {% with laptop.images.first as first_image %}
+                                    {% if first_image %}
+                                        <img src="{{ first_image.image.url }}" alt="{{ laptop.name }}">
+                                    {% else %}
+                                        <img src="{% static 'images/placeholder.png' %}" alt="No Image Available">
+                                    {% endif %}
+                                {% endwith %}
+                                <h3>{{ laptop.name }}</h3>
+                            </a>
+                            <p class="price">₹{{ laptop.price }}</p>
+                            <div class="product-details">
+                                {% if laptop.description %}
+                                    <p>{{ laptop.description|truncatewords:20 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="product-actions">
+                                <a href="{% url 'add_to_cart' laptop.id %}" class="action-btn"><i class="fas fa-shopping-cart"></i></a>
+                                <a href="{% url 'add_to_wishlist' laptop.id %}" class="action-btn"><i class="fas fa-heart"></i></a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-products">No laptop products found.</p>
+                    {% endif %}
+                </div>
+            </section>
+        {% else %}
+            <p>Enter a search term above to find products.</p>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById('searchInput');
+            const clearButton = document.getElementById('clearSearch');
+
+            // Show/hide the clear button based on input
+            searchInput.addEventListener('input', function () {
+                clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+            });
+
+            // Clear search and redirect to shop page
+            clearButton.addEventListener('click', function () {
+                searchInput.value = '';
+                window.location.href = '{% url "shop_page" %}';
+            });
+
+            // Initial check on page load
+            clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+
+            // Load initial cart and wishlist counts
+            loadInitialCounts();
+        });
+
+        // Functions copied from shop.html to handle counts
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wishlist_count !== undefined) {
+                    updateWishlistCount(data.wishlist_count);
+                }
+            })
+            .catch(error => console.error('Error loading wishlist count:', error));
+        }
+
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+        }
+
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+        }
+    </script>
+</body>
+</html>

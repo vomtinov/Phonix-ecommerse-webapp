@@ -1,0 +1,236 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Address</title>
+    <link rel="stylesheet" href="{% static 'add_address.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .cart-count, .wishlist-count {
+            background-color: #ff4444; /* Red background */
+            color: white; /* White text */
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 6px; /* Padding for spacing */
+            font-size: 12px; /* Font size */
+            margin-left: 5px; /* Margin to separate from the icon */
+            vertical-align: top; /* Align with the icon */
+        }
+    </style>
+    <script>
+        function validateForm(event) {
+            let phone = document.getElementById("phone").value;
+            let altPhone = document.getElementById("alternative_phone").value;
+            let pincode = document.getElementById("pincode").value;
+            let phonePattern = /^[0-9]{10}$/;
+            let pinPattern = /^[0-9]{6}$/;
+
+            if (!phonePattern.test(phone)) {
+                alert("Enter a valid 10-digit phone number.");
+                event.preventDefault();
+                return false;
+            }
+            if (altPhone && !phonePattern.test(altPhone)) {
+                alert("Enter a valid 10-digit alternative phone number.");
+                event.preventDefault();
+                return false;
+            }
+            if (!pinPattern.test(pincode)) {
+                alert("Enter a valid 6-digit pincode.");
+                event.preventDefault();
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+    
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+    
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
+    
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a>
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <ul>
+                <li><a href="{% url 'account_profile' %}" >Account Overview</a></li>
+                <li><a href="{% url 'order_details' %}">Order Details</a></li>
+                <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
+                <li><a href="#">Wallet</a></li>
+                <li><a href="/wishlist">Wishlist</a></li>
+                <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
+            </ul>
+        </aside>
+    
+        <main class="content">
+            <h2>Add New Address</h2>
+            <form action="{% url 'add_address' %}" method="POST" onsubmit="return validateForm(event)">
+                {% csrf_token %}
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required pattern="^[A-Za-z\s]{2,50}$" title="Only alphabets allowed, min 2 characters">
+    
+                <label for="city">City:</label>
+                <input type="text" id="city" name="city" required pattern="^[A-Za-z\s]{2,50}$" title="Only alphabets allowed">
+    
+                <label for="landmark">Landmark:</label>
+                <input type="text" id="landmark" name="landmark">
+    
+                <label for="district">District:</label>
+                <input type="text" id="district" name="district" required pattern="^[A-Za-z\s]{2,50}$" title="Only alphabets allowed">
+    
+                <label for="state">State:</label>
+                <input type="text" id="state" name="state" required pattern="^[A-Za-z\s]{2,50}$" title="Only alphabets allowed">
+    
+                <label for="pincode">Pincode:</label>
+                <input type="text" id="pincode" name="pincode" required pattern="^[0-9]{6}$" title="Enter a valid 6-digit pincode">
+    
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" name="phone" required pattern="^[0-9]{10}$" title="Enter a valid 10-digit phone number">
+    
+                <label for="alternative_phone">Alternative Phone:</label>
+                <input type="text" id="alternative_phone" name="alternative_phone" pattern="^[0-9]{10}$" title="Enter a valid 10-digit phone number">
+    
+                <button type="submit">Save Address</button>
+                <button type="button" onclick="location.href='{% url 'manage_address' %}'">Cancel</button>
+            </form>
+        </main>
+    </div>
+
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Search Input & Clear Button Logic
+            let searchInput = document.getElementById("searchInput");
+            let clearSearch = document.getElementById("clearSearch");
+    
+            searchInput.addEventListener("input", function () {
+                clearSearch.style.display = searchInput.value.trim() !== "" ? "inline-block" : "none";
+            });
+    
+            clearSearch.addEventListener("click", function () {
+                searchInput.value = "";
+                clearSearch.style.display = "none";
+            });
+    
+            // Cart and Wishlist Count Logic
+            function loadInitialCounts() {
+                fetch('/get_cart_count/', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Initial cart count response:', data);
+                    if (data.cart_count !== undefined) {
+                        updateCartCount(data.cart_count);
+                    } else {
+                        console.log('No cart_count in initial response, setting to 0');
+                        updateCartCount(0);
+                    }
+                })
+                .catch(error => console.error('Error loading cart count:', error));
+    
+                fetch('/get_wishlist_count/', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Initial wishlist count response:', data);
+                    if (data.wishlist_count !== undefined && data.wishlist_count !== null) {
+                        updateWishlistCount(data.wishlist_count);
+                    } else {
+                        console.log('No valid wishlist_count in initial response, setting to 0');
+                        updateWishlistCount(0);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading wishlist count:', error);
+                    updateWishlistCount(0);
+                });
+            }
+    
+            function updateCartCount(count) {
+                const cartCountElement = document.querySelector('.cart-count');
+                cartCountElement.textContent = count || '0';
+                console.log('Updated cart count to:', count || '0');
+            }
+    
+            function updateWishlistCount(count) {
+                const wishlistCountElement = document.querySelector('.wishlist-count');
+                wishlistCountElement.textContent = count || '0';
+                wishlistCountElement.style.display = 'inline-block'; // Ensure visibility
+                console.log('Updated wishlist count to:', count || '0');
+            }
+    
+            // Load counts on page load
+            loadInitialCounts();
+    
+            // Handle form submission with AJAX
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent default form submission
+    
+                if (!validateForm(event)) {
+                    return; // Stop if validation fails
+                }
+    
+                const formData = new FormData(form);
+    
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Redirect to manage_address with a success message in the query string
+                        window.location.href = "{% url 'manage_address' %}?message=" + encodeURIComponent(data.message);
+                    } else {
+                        alert(data.message || 'An error occurred while adding the address.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while adding the address.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

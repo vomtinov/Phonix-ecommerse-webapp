@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Address</title>
+    <link rel="stylesheet" href="{% static 'add_address.css' %}">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .cart-count, .wishlist-count {
+            background-color: #ff4444; /* Red background */
+            color: white; /* White text */
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 6px; /* Padding for spacing */
+            font-size: 12px; /* Font size */
+            margin-left: 5px; /* Margin to separate from the icon */
+            vertical-align: top; /* Align with the icon */
+        }
+    </style>
+    <script>
+        function validateForm(event) {
+            let form = document.querySelector('.form-container form');
+            let inputs = form.querySelectorAll('input[required], textarea[required]');
+            
+            for (let input of inputs) {
+                if (input.value.trim() === '') {
+                    alert(input.name.charAt(0).toUpperCase() + input.name.slice(1) + ' is required');
+                    input.focus();
+                    event.preventDefault();
+                    return false;
+                }
+            }
+
+            let mobileInput = form.querySelector('input[name="mobile_number"]');
+            if (mobileInput) {
+                let mobilePattern = /^[0-9]{10}$/;
+                if (!mobilePattern.test(mobileInput.value.trim())) {
+                    alert("Please enter a valid 10-digit mobile number.");
+                    mobileInput.focus();
+                    event.preventDefault();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelector('.form-container form').addEventListener('submit', validateForm);
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+    
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+    
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
+    
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a>
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar">
+            <ul>
+                <li><a href="{% url 'account_profile' %}" >Account Overview</a></li>
+                <li><a href="{% url 'order_details' %}">Order Details</a></li>
+                <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
+                <li><a href="#">Wallet</a></li>
+                <li><a href="/wishlist">Wishlist</a></li>
+                <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
+            </ul>
+        </aside>
+
+        <section class="form-container">
+            <h2>Edit Address</h2>
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <div class="buttons">
+                    <button type="submit" class="save-btn">Save Changes</button>
+                    <a href="{% url 'manage_address' %}" class="cancel-btn">Cancel</a>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <footer>
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Search Input & Clear Button Logic
+            let searchInput = document.getElementById("searchInput");
+            let clearSearch = document.getElementById("clearSearch");
+
+            searchInput.addEventListener("input", function () {
+                clearSearch.style.display = searchInput.value.trim() !== "" ? "inline-block" : "none";
+            });
+
+            clearSearch.addEventListener("click", function () {
+                searchInput.value = "";
+                clearSearch.style.display = "none";
+            });
+
+            // Cart and Wishlist Count Logic
+            function loadInitialCounts() {
+                fetch('/get_cart_count/', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Initial cart count response:', data);
+                    if (data.cart_count !== undefined) {
+                        updateCartCount(data.cart_count);
+                    } else {
+                        console.log('No cart_count in initial response, setting to 0');
+                        updateCartCount(0);
+                    }
+                })
+                .catch(error => console.error('Error loading cart count:', error));
+
+                fetch('/get_wishlist_count/', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Initial wishlist count response:', data);
+                    if (data.wishlist_count !== undefined && data.wishlist_count !== null) {
+                        updateWishlistCount(data.wishlist_count);
+                    } else {
+                        console.log('No valid wishlist_count in initial response, setting to 0');
+                        updateWishlistCount(0);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading wishlist count:', error);
+                    updateWishlistCount(0);
+                });
+            }
+
+            function updateCartCount(count) {
+                const cartCountElement = document.querySelector('.cart-count');
+                cartCountElement.textContent = count || '0';
+                console.log('Updated cart count to:', count || '0');
+            }
+
+            function updateWishlistCount(count) {
+                const wishlistCountElement = document.querySelector('.wishlist-count');
+                wishlistCountElement.textContent = count || '0';
+                wishlistCountElement.style.display = 'inline-block'; // Ensure visibility
+                console.log('Updated wishlist count to:', count || '0');
+            }
+
+            // Load counts on page load
+            loadInitialCounts();
+        });
+    </script>
+</body>
+</html>

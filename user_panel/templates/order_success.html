@@ -1,0 +1,214 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Success - Phonix</title>
+    <link rel="stylesheet" href="{% static 'order_success.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Existing styles */
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+
+        /* Toast Notification Styles (optional, if needed) */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .toast {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+        
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+        
+        <nav>
+            <a href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="success-header">
+            <h2>{{ message }}</h2>
+            <div class="order-status">
+                <span class="status-dot confirmed"><i class="fas fa-check"></i> Order Confirmed</span>
+                <span class="status-line"></span>
+                <span class="status-dot">Shipped</span>
+                <span class="status-line"></span>
+                <span class="status-dot">Delivered</span>
+            </div>
+        </div>
+        <div class="order-content">
+            <div class="order-details">
+                <h3>Order Summary</h3>
+                <div class="detail-item">
+                    <span class="label">Order ID:</span>
+                    <span class="value">{{ order_id }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Total Price:</span>
+                    <span class="value">₹{{ total_price }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Payment Method:</span>
+                    <span class="value">{{ payment_method }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Shipping Address:</span>
+                    <span class="value">    
+                        {{ shipping_address.name }}<br>
+                        {{ shipping_address.city }}, {{ shipping_address.district }}, {{ shipping_address.state }} - {{ shipping_address.pincode }}<br>
+                        Phone: {{ shipping_address.phone }}<br>
+                        {% if shipping_address.landmark %}
+                            Landmark: {{ shipping_address.landmark }}<br>
+                        {% endif %}
+                        {% if shipping_address.alternative_phone %}
+                            Alternative Phone: {{ shipping_address.alternative_phone }}<br>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="order-items">
+                <h3>Order Items</h3>
+                <ul>
+                    {% for item in order_items %}
+                        <li>
+                            <span class="item-name">{{ item.product.name }}</span>
+                            <span class="item-quantity">Qty: {{ item.quantity }}</span>
+                            <span class="item-price">₹{{ item.price }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <a href="{% url 'shop_page' %}">Continue Shopping</a>
+            <a href="{% url 'order_details' %}">Track Order</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>© 2025 Phonix. All rights reserved.</p>
+    </footer>
+
+    <!-- Toast Container (optional, if you want to reuse toast functionality) -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Search bar functionality
+        document.getElementById('clearSearch').addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            window.location.href = '{% url "shop_page" %}';
+        });
+
+        const searchInput = document.getElementById('searchInput');
+        const clearButton = document.getElementById('clearSearch');
+
+        searchInput.addEventListener('input', function() {
+            clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+        });
+
+        window.onload = function() {
+            clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+            loadInitialCounts();
+        };
+
+        // Load initial counts for cart and wishlist
+        function loadInitialCounts() {
+            fetch('/get_cart_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+            })
+            .catch(error => console.error('Error loading cart count:', error));
+
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wishlist_count !== undefined) {
+                    updateWishlistCount(data.wishlist_count);
+                }
+            })
+            .catch(error => console.error('Error loading wishlist count:', error));
+        }
+
+        // Update cart count
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            cartCountElement.textContent = count || '0';
+        }
+
+        // Update wishlist count
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            wishlistCountElement.textContent = count || '0';
+        }
+
+        // Get CSRF token (required for future AJAX if needed)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
