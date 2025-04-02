@@ -5,23 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Product</title>
-    <link rel="stylesheet" href="{% static 'edit_productt.css' %}">
+    <link rel="stylesheet" href="{% static 'add_productt.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; display: flex; }
-        .sidebar { width: 250px; background: #f4f4f4; padding: 20px; height: 100vh; }
-        .container { flex: 1; padding: 20px; }
-        .variant-section { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
-        .image-preview img { max-width: 100px; margin: 5px; }
-        .delete-btn { background: red; color: white; border: none; cursor: pointer; margin-left: 5px; }
-        .add-variant-btn { margin-top: 10px; background: #28a745; color: white; padding: 5px 10px; }
-        .variant-images { margin-top: 10px; }
-        .image-input { margin-bottom: 10px; display: flex; align-items: center; }
-        .crop-btn { margin-left: 10px; }
-        .delete-variant-btn { margin-top: 10px; background: #dc3545; color: white; padding: 5px 10px; }
-        .submit-btn { margin-top: 20px; background: #007bff; color: white; padding: 10px 20px; }
-    </style>
+    
 </head>
 <body>
     <div class="sidebar">
@@ -37,9 +24,9 @@
             <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
             <li><a href="{% url 'product_list' %}">Product</a></li>
             <li><a href="{% url 'add_product' %}">Add Product</a></li>
-            <li><a href="#">Coupon</a></li>
-            <li><a href="#">Orders</a></li>
-            <li><a href="#">Offers</a></li>
+            <li><a href="{% url 'coupon_list' %}">Coupon</a></li>
+            <li><a href="{% url 'order_list' %}">Order</a></li>
+            <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="#">Return</a></li>
             <li><a href="#">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>

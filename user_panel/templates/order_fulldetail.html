@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details</title>
-    <link rel="stylesheet" href="{% static 'order_fulldetails.css' %}">
+    <link rel="stylesheet" href="{% static 'order_fulldetail.css' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -93,24 +93,65 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4">No items found.</td>
+                    <td colspan="4">
+                        {% if order.status == "Returned" %}
+                            Order items are no longer available as this order has been returned. Total amount refunded: ₹{{ order.total_price|floatformat:2 }}.
+                        {% else %}
+                            No items found for this order.
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
-        </table>
-        
+        </table>        
         <!-- Order Summary -->
         <div class="order-summary">
             <p><strong>Subtotal:</strong> ₹{{ subtotal|default:0|floatformat:2 }}</p>
             <p><strong>Shipping Fee:</strong> ₹{{ shipping_fee|default:0|floatformat:2 }}</p>
-            <p><strong>Grand Total:</strong> ₹{{ grand_total|default:0|floatformat:2 }}</p>
+            <p><strong>Grand Total:</strong> ₹{% if grand_total > 0 %}{{ grand_total|floatformat:2 }}{% else %}{{ order.total_price|floatformat:2 }}{% endif %}</p>
         </div>
         
         <a href="{% url 'order_details' %}" class="back-btn">Back to Orders</a>
     </div>
 
     <footer>
-        <p>&copy; 2025 Phonix. All rights reserved.</p>
+        <div class="footer-container">
+            <div class="footer-section connect">
+                <h3>CONNECT WITH US</h3>
+                <div class="newsletter">
+                    <input type="email" placeholder="Enter Email ID">
+                    <button>→</button>
+                </div>
+                <div class="social-icons">
+                    <a><i class="fab fa-youtube"></i></a>
+                    <a><i class="fab fa-facebook-f"></i></a>
+                    <a><i class="fab fa-instagram"></i></a>
+                    <a><i class="fab fa-linkedin-in"></i></a>
+                    <a><i class="fab fa-twitter"></i></a>
+                </div>
+                <p>© Copyright 2025 Phonix. All rights reserved</p>
+            </div>
+    
+            <div class="footer-section useful-links">
+                <h3>USEFUL LINKS</h3>
+                <ul>
+                    <li><a>About Us</a></li>
+                    <li><a>Help & Support</a></li>
+                    <li><a>FAQs</a></li>
+                    <li><a>Return Policy</a></li>
+                    <li><a>Privacy Policy</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-section products">
+                <h3>PRODUCTS</h3>
+                <ul>
+                    <li><a>Phones </a></li>
+                    <li><a>Laptops </a></li>
+                    <li><a>Top Brands</a></li>
+                </ul>
+            </div>
+        </div>
     </footer>
 
     <script>

@@ -5,21 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categories</title>
-    <link rel="stylesheet" href="{% static 'category.css' %}">
+    <link rel="stylesheet" href="{% static 'categoryy.css' %}">
     <script src="{% static 'category.js' %}"></script>
-    <script>
-        function toggleSidebar() {
-            let sidebar = document.querySelector(".sidebar");
-            sidebar.classList.toggle("collapsed");
-        }
-
-        function confirmAction(url, action) {
-            if (confirm(`Are you sure you want to ${action} this category?`)) {
-                window.location.href = url;
-            }
-            return false;
-        }
-    </script>
+     
 </head>
 <body>
 
@@ -38,9 +26,9 @@
             <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
             <li><a href="{% url 'product_list' %}">Product</a></li>
             <li><a href="{% url 'add_product' %}">Add Product</a></li>
-            <li><a href="#">Coupon</a></li>
-            <li><a href="#">Orders</a></li>
-            <li><a href="#">Offers</a></li>
+            <li><a href="{% url 'coupon_list' %}">Coupon</a></li>
+            <li><a href="{% url 'order_list' %}">Order</a></li>
+            <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="#">Return</a></li>
             <li><a href="#">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>
@@ -74,7 +62,7 @@
                     <td>{{ category.status|yesno:"Active,Inactive" }}</td>
                     <td>
                         <a href="{% url 'edit_category' category.id %}" class="edit-button">Edit</a>
-                        <a href="#" onclick="return confirmAction('{% url 'delete_category' category.id %}', 'delete');" class="delete-button">Delete</a>
+                        <a href="{% url 'delete_category' category.id %}" class="delete-button">Delete</a>
                     </td>
                 </tr>
                 {% empty %}

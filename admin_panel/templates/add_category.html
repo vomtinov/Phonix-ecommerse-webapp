@@ -5,7 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Category</title>
-    <link rel="stylesheet" href="{% static 'add_category.css' %}">
+    <link rel="stylesheet" href="{% static 'add_categoryy.css' %}">
+    <script>
+        function toggleSidebar() {
+            let sidebar = document.querySelector(".sidebar");
+            sidebar.classList.toggle("collapsed");
+        }
+    </script>
 </head>
 <body>
 
@@ -23,8 +29,9 @@
             <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
             <li><a href="{% url 'product_list' %}">Product</a></li>
             <li><a href="{% url 'add_product' %}">Add Product</a></li>
-            <li><a href="#">Orders</a></li>
-            <li><a href="#">Offers</a></li>
+            <li><a href="{% url 'coupon_list' %}">Coupon</a></li>
+            <li><a href="{% url 'order_list' %}">Order</a></li>
+            <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="#">Return</a></li>
             <li><a href="#">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>
@@ -49,7 +56,7 @@
         </form>
     </div>
 
-    <script src="{% static 'category.js' %}"></script>
+    </script>
 
 </body>
 </html>

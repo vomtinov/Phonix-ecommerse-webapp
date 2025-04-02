@@ -9,14 +9,14 @@
 body {
     display: flex;
     min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: #f1f5f9; /* Light background matching the screenshot */
     color: #2c3e50;
 }
 
 /* Sidebar Styles */
 .sidebar {
-    width: 280px;
-    background: linear-gradient(180deg, #2c3e50, #3498db);
+    width: 250px; /* Slightly narrower to match the screenshot */
+    background: #2c3e50; /* Darker solid color to match the screenshot */
     color: white;
     height: 100vh;
     position: fixed;
@@ -31,12 +31,11 @@ body {
 }
 
 .sidebar h2 {
-    padding: 25px 20px;
-    font-size: 1.8rem;
+    padding: 20px;
+    font-size: 1.5rem;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     font-weight: 600;
 }
 
@@ -52,48 +51,32 @@ body {
 .sidebar ul li a {
     color: #fff;
     text-decoration: none;
-    padding: 15px 20px;
+    padding: 12px 20px;
     display: flex;
     align-items: center;
     transition: all 0.3s ease;
-    position: relative;
     font-size: 1rem;
 }
 
 .sidebar ul li a:hover {
     background: rgba(255, 255, 255, 0.1);
     padding-left: 25px;
-    transform: translateX(5px);
-}
-
-.sidebar ul li a:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: #fff;
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-}
-
-.sidebar ul li a:hover:before {
-    transform: scaleY(1);
 }
 
 .toggle-btn {
     position: absolute;
-    right: -50px;
+    right: -40px;
     top: 15px;
     background: #3498db;
     border: none;
     color: white;
-    padding: 12px 15px;
+    padding: 10px 12px;
     cursor: pointer;
     border-radius: 0 8px 8px 0;
     transition: all 0.3s ease;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1100; /* Ensure it’s above other elements */
+    display: block;
 }
 
 .toggle-btn:hover {
@@ -103,78 +86,72 @@ body {
 
 /* Main Container */
 .container-fluid {
-    margin-left: 280px;
+    margin-left: 250px;
     padding: 20px;
-    width: calc(100% - 280px);
+    width: calc(100% - 250px);
     transition: all 0.3s ease;
 }
 
 main {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
+    background: #fff; /* White background for the main content */
+    border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 /* Header Section */
 .d-flex {
-    background: linear-gradient(45deg, #3498db, #2ecc71);
-    padding: 15px 20px;
-    border-radius: 10px;
-    margin-bottom: 25px;
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    flex-wrap: wrap;
-    gap: 15px;
+    padding: 10px 0;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    border-bottom: 1px solid #e5e7eb; /* Light border to match the screenshot */
 }
 
 .h2 {
-    font-weight: 700;
-    font-size: 2rem;
+    font-weight: 600;
+    font-size: 1.8rem;
     margin: 0;
 }
 
 .btn-outline-primary {
-    border-color: white;
-    color: white;
-    padding: 8px 20px;
-    border-radius: 25px;
+    border-color: #3498db;
+    color: #3498db;
+    padding: 6px 15px;
+    border-radius: 5px;
     transition: all 0.3s ease;
     font-size: 0.9rem;
 }
 
 .btn-outline-primary:hover {
-    background: white;
-    color: #3498db;
+    background: #3498db;
+    color: #fff;
     transform: translateY(-2px);
 }
 
 /* Tabs */
 .offer-type-tabs .nav-tabs {
     border: none;
-    background: #ecf0f1;
+    background: #f1f5f9; /* Light background for tabs */
     padding: 5px;
-    border-radius: 25px;
+    border-radius: 5px;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 10px;
 }
 
 .nav-tabs .nav-link {
     border: none;
-    padding: 10px 20px;
-    color: #7f8c8d;
-    font-weight: 600;
+    padding: 8px 15px;
+    color: #6b7280;
+    font-weight: 500;
     transition: all 0.3s ease;
-    border-radius: 20px;
+    border-radius: 5px;
     font-size: 0.9rem;
 }
 
 .nav-tabs .nav-link.active {
     background: #3498db;
     color: white;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .nav-tabs .nav-link:hover {
@@ -189,37 +166,35 @@ main {
 
 .table-responsive {
     background: white;
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     overflow-x: auto;
 }
 
 .table {
     margin-bottom: 0;
-    border-collapse: separate;
-    border-spacing: 0 10px;
     width: 100%;
 }
 
 .table thead {
-    background: linear-gradient(45deg, #2c3e50, #3498db);
-    color: white;
+    background: #f1f5f9; /* Light background for table header */
+    color: #2c3e50;
 }
 
 .table th {
-    padding: 12px 15px;
+    padding: 10px 15px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     border: none;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     white-space: nowrap;
 }
 
 .table td {
-    padding: 12px 15px;
-    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 15px;
+    background: #fff;
     vertical-align: middle;
     border: none;
     font-size: 0.9rem;
@@ -227,22 +202,18 @@ main {
 
 .table tr {
     transition: all 0.3s ease;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .table tr:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    background: #f9fafb;
 }
 
 /* Badges */
 .badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    font-size: 0.85rem;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: 500;
+    font-size: 0.8rem;
 }
 
 .badge.bg-success {
@@ -253,15 +224,11 @@ main {
     background: #e74c3c !important;
 }
 
-.badge:hover {
-    transform: scale(1.05);
-}
-
 /* Buttons */
 .btn-group .btn {
-    padding: 6px 12px;
-    border-radius: 20px;
-    margin: 0 5px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin: 0 3px;
     transition: all 0.3s ease;
     font-size: 0.85rem;
 }
@@ -278,7 +245,6 @@ main {
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* Responsive Design */
@@ -304,16 +270,15 @@ main {
     }
 
     .toggle-btn {
-        right: 0;
-        border-radius: 0;
+        position: fixed !important;
+        right: 0 !important;
+        top: 15px !important;
+        z-index: 1200 !important;
+        display: block !important;
     }
 
     .h2 {
         font-size: 1.5rem;
-    }
-
-    .d-flex {
-        padding: 15px;
     }
 }
 
@@ -355,30 +320,25 @@ main {
     }
 
     .btn-outline-primary {
-        padding: 6px 15px;
+        padding: 5px 12px;
         font-size: 0.8rem;
     }
 
     .offer-type-tabs .nav-tabs {
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
         padding: 10px;
     }
 
     .nav-tabs .nav-link {
         width: 100%;
-        text-align: center;
+        text-align: left;
         margin: 5px 0;
     }
 
     .table th, .table td {
-        padding: 10px;
+        padding: 8px;
         font-size: 0.8rem;
-    }
-
-    .btn-group .btn {
-        padding: 5px 10px;
-        font-size: 0.75rem;
     }
 }
 
@@ -390,16 +350,16 @@ main {
     .d-flex {
         flex-direction: column;
         align-items: flex-start;
-        padding: 10px;
+        padding: 10px 0;
     }
 
     .table th, .table td {
-        padding: 8px;
+        padding: 6px;
         font-size: 0.75rem;
     }
 
     .badge {
-        padding: 5px 10px;
+        padding: 4px 8px;
         font-size: 0.7rem;
     }
 
@@ -415,16 +375,3 @@ main {
     }
 }
 
-/* Animation for Sidebar Toggle */
-@keyframes slideIn {
-    from {
-        transform: translateX(-100%);
-    }
-    to {
-        transform: translateX(0);
-    }
-}
-
-.sidebar {
-    animation: slideIn 0.3s ease-out;
-}

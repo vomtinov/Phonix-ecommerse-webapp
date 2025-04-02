@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>order List</title>
-    <link rel="stylesheet" href="{% static 'product_list.css' %}">
+    <title>Order List</title>
+    <link rel="stylesheet" href="{% static 'order.css' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -13,7 +13,7 @@
 <body>
     <div class="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">☰</button>
-        <h2>Products</h2>
+        <h2>Orders</h2>
         <ul>
             <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
             <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
@@ -24,9 +24,9 @@
             <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
             <li><a href="{% url 'product_list' %}">Product</a></li>
             <li><a href="{% url 'add_product' %}">Add Product</a></li>
-            <li><a href="">Coupon</a></li>
-            <li><a href="">Orders</a></li>
-            <li><a href="#">Offers</a></li>
+            <li><a href="{% url 'coupon_list' %}">Coupon</a></li>
+            <li><a href="{% url 'order_list' %}">Order</a></li>
+            <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="">Return</a></li>
             <li><a href="">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>
@@ -98,6 +98,24 @@
     </div>
 
     <script>
+        // Move toggleSidebar to global scope for onclick access
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const container = document.querySelector('.container');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                container.style.marginLeft = '60px';
+                sidebar.querySelector('h2').style.display = 'none';
+                sidebar.querySelectorAll('ul li a').forEach(link => link.style.display = 'none');
+            } else {
+                container.style.marginLeft = '250px';
+                sidebar.querySelector('h2').style.display = 'block';
+                sidebar.querySelectorAll('ul li a').forEach(link => link.style.display = 'block');
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".confirm-return").forEach(button => {
                 button.addEventListener("click", function () {
@@ -144,6 +162,7 @@
                 .catch(error => Swal.fire("Error", "Something went wrong!", "error"));
             }
         });
+
         $(document).ready(function(){
             // Log initial statuses
             $(".order-status").each(function() {
@@ -288,30 +307,6 @@
                     }
                 });
             });
-            
-            // Remove this duplicate event handler
-            /*
-            $(".confirm-return").click(function(){
-                var button = $(this);
-                var orderId = button.data("order-id");
-                $.ajax({
-                    url: `/approve-return/${orderId}/`,
-                    type: "POST",
-                    data: {
-                        csrfmiddlewaretoken: "{{ csrf_token }}"
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            const row = button.closest('tr');
-                            row.find('.order-status').val("Returned").prop("disabled", true);
-                            button.remove();  // Remove confirm button
-                        } else {
-                            alert("Failed to approve return: " + response.message);
-                        }
-                    }
-                });
-            });
-            */
         });
     </script>
 </body>

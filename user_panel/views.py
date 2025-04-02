@@ -1,5 +1,5 @@
 from django.shortcuts import render,get_object_or_404,redirect
-from authentication.models import Product, Category, Brand,Address,Wishlist,Cart,Order,OrderItem,Wallet, Transaction,Variant,ProductImage
+from authentication.models import Product, Category, Brand,Address,Wishlist,Cart,Order,OrderItem,Wallet, Transaction,Variant,ProductImage,Offer
 from django.contrib.auth.decorators import user_passes_test
 from .decorators import active_user_required
 from .forms import UserEditForm,AddressForm
@@ -200,9 +200,29 @@ def mobile_details(request, product_id):
 
 @active_user_required
 def laptop_detail(request, laptop_id):
-    laptop = get_object_or_404(Product, id=laptop_id, category__name='Laptop')  
-    return render(request, 'laptop_detail page.html', {'laptop': laptop})
-
+    from django.utils import timezone
+    
+    laptop = get_object_or_404(Product, id=laptop_id, category__name='Laptop')
+    
+    # Get offers for this laptop with a more generic approach
+    offers = Offer.objects.filter(
+        product=laptop,
+        start_date__lte=timezone.now(),
+        end_date__gte=timezone.now()
+    )
+    
+    # Get related models - laptops from the same brand
+    related_models = Product.objects.filter(
+        category__name='Laptop',
+        brand=laptop.brand
+    ).exclude(id=laptop.id)[:4]
+    
+    return render(request, 'laptop_detail page.html', {
+        'laptop': laptop,
+        'offers': offers,
+        'related_models': related_models
+    })
+    
 def account_profile(request):
     return render(request, 'account_details.html', {'user': request.user})
 
@@ -814,42 +834,69 @@ def get_order_statuses(request):
 @login_required
 def order_fulldetail_view(request, order_id):
     try:
-        # Use select_related and prefetch_related for optimized querying
-        order = Order.objects.select_related('user', 'shipping_address').prefetch_related(
-            Prefetch('items', 
-                queryset=OrderItem.objects.select_related('product', 'variant', 'order')
-            )
-        ).get(id=order_id, user=request.user)
+        # Get the order
+        order = Order.objects.get(id=order_id, user=request.user)
         
-        # Fetch order items with related data
-        order_items = OrderItem.objects.filter(order=order).select_related('product', 'variant')
+        # Get order items directly through the related name
+        order_items = order.items.all().select_related('product', 'variant')
         
-        # Calculate totals
-        subtotal = sum(
-            item.quantity * (item.price or 0)
-            for item in order_items
-        )
-        
-        # Use the shipping fee from the order
-        shipping_fee = order.shipping_fee or Decimal('0.00')
-        grand_total = subtotal + shipping_fee
-
-        # Retrieve images for order items efficiently
-        order_items_with_images = []
+        # Debug: Check if order items exist
+        print(f"Order #{order.id} - Total Price: {order.total_price}, Status: {order.status}")
+        print(f"Number of Order Items Found: {order_items.count()}")
         for item in order_items:
-            # Find the first image for the variant
+            print(f"OrderItem - Product: {item.product}, Variant: {item.variant}, Quantity: {item.quantity}, Price: {item.price}")
+        
+        # Initialize lists and values
+        order_items_with_images = []
+        subtotal = Decimal('0.00')
+        
+        # Process each order item
+        for item in order_items:
+            # Calculate subtotal
+            item_price = item.price or Decimal('0.00')
+            subtotal += item.quantity * item_price
+            
+            # Get variant details if available
+            variant_details = "N/A"
             try:
-                image = ProductImage.objects.filter(variant=item.variant).first()
-            except Exception:
+                if item.variant:
+                    variant_details = f"{item.variant.ram}GB/{item.variant.storage}GB/{item.variant.color}"
+            except AttributeError as e:
+                print(f"Error fetching variant details for item {item.id}: {str(e)}")
+                variant_details = "Custom variant"
+            
+            # Get product image
+            image = None
+            try:
+                if item.variant and item.variant.images.exists():
+                    image = item.variant.images.first()
+                    print(f"Found image for variant {item.variant}: {image.image.url if image else 'No image'}")
+                if not image and item.product:
+                    image = ProductImage.objects.filter(product=item.product, variant__isnull=True).first()
+                    print(f"Found image for product {item.product}: {image.image.url if image else 'No image'}")
+            except Exception as e:
+                print(f"Error fetching image for item {item.id}: {str(e)}")
                 image = None
             
+            # Get product name
+            product_name = "Unknown Product"
+            try:
+                product_name = item.product.name if item.product else "Unknown Product"
+            except Exception as e:
+                print(f"Error fetching product name for item {item.id}: {str(e)}")
+            
+            # Add to our items list
             order_items_with_images.append({
                 'item': item,
                 'image': image,
-                'product_name': item.product.name,
-                'variant_details': f"{item.variant.ram}GB/{item.variant.storage}GB/{item.variant.color}" if item.variant else "N/A"
+                'product_name': product_name,
+                'variant_details': variant_details
             })
-
+        
+        # Calculate totals
+        shipping_fee = order.shipping_fee or Decimal('0.00')
+        grand_total = subtotal + shipping_fee
+        
         context = {
             'order': order,
             'order_items_with_images': order_items_with_images,
@@ -858,7 +905,7 @@ def order_fulldetail_view(request, order_id):
             'grand_total': grand_total,
         }
         
-        # Debug print statements
+        # Debug: Print the final list
         print(f"Order Items Count: {len(order_items_with_images)}")
         for item_data in order_items_with_images:
             print(f"Product: {item_data['product_name']}, Variant: {item_data['variant_details']}, Quantity: {item_data['item'].quantity}, Price: {item_data['item'].price}")
@@ -869,11 +916,10 @@ def order_fulldetail_view(request, order_id):
         messages.error(request, "Order not found.")
         return redirect('order_details')
     except Exception as e:
-        # Log the error and show a generic error message
+        # Log the error for debugging
         print(f"Error in order_fulldetail_view: {str(e)}")
         messages.error(request, "An error occurred while fetching order details.")
         return redirect('order_details')
-
 
 def generate_invoice_pdf(request, order_id):
     try:

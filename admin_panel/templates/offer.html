@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Offer List</title>
-    <link rel="stylesheet" href="{% static 'offer.css' %}">
+    <link rel="stylesheet" href="{% static 'offers.css' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
 <body>
     <div class="sidebar">
         <button class="toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">☰</button>
-        <h2>Products</h2>
+        <h2>Offer</h2>
         <ul>
             <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
             <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
@@ -26,9 +26,9 @@
             <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
             <li><a href="{% url 'product_list' %}">Product</a></li>
             <li><a href="{% url 'add_product' %}">Add Product</a></li>
-            <li><a href="">Coupon</a></li>
-            <li><a href="">Orders</a></li>
-            <li><a href="#">Offers</a></li>
+            <li><a href="{% url 'coupon_list' %}">Coupon</a></li>
+            <li><a href="{% url 'order_list' %}">Order</a></li>
+            <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="">Return</a></li>
             <li><a href="">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>
@@ -207,6 +207,45 @@
                     });
                 });
             });
+
+            function toggleSidebar() {
+                const sidebar = document.querySelector('.sidebar');
+                const container = document.querySelector('.container-fluid');
+    
+                // Toggle the 'collapsed' class on the sidebar
+                sidebar.classList.toggle('collapsed');
+    
+                // Toggle the 'sidebar-collapsed' class on the container to adjust its margin
+                container.classList.toggle('sidebar-collapsed');
+    
+                // On mobile, toggle the 'active' class to show/hide the sidebar
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.toggle('active');
+                }
+            }
+            window.addEventListener('resize', function () {
+                const sidebar = document.querySelector('.sidebar');
+                const container = document.querySelector('.container-fluid');
+    
+                if (window.innerWidth > 768) {
+                    // On larger screens, remove the 'active' class and handle 'collapsed' state
+                    sidebar.classList.remove('active');
+                    if (sidebar.classList.contains('collapsed')) {
+                        container.classList.add('sidebar-collapsed');
+                    } else {
+                        container.classList.remove('sidebar-collapsed');
+                    }
+                } else {
+                    // On smaller screens, ensure the sidebar is hidden by default unless 'active'
+                    if (!sidebar.classList.contains('active')) {
+                        sidebar.classList.add('collapsed');
+                        container.classList.add('sidebar-collapsed');
+                    }
+                }
+            });
+    
+            // Run the resize handler on page load to set the initial state
+            window.dispatchEvent(new Event('resize'));
         });
     </script>
 </body>

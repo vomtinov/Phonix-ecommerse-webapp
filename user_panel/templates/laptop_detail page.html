@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ laptop.name }} - Laptop Details</title>
-    <link rel="stylesheet" href="{% static 'mobile product page.css' %}">
+    <link rel="stylesheet" href="{% static 'mobile product pagee.css' %}">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -63,6 +63,26 @@
                 {% if laptop.category %}
                     <p class="category">Category: <strong>{{ laptop.category.name }}</strong></p>
                 {% endif %}
+                {% if offers %}
+                <div class="offers-container">
+                    <h3>Special Offers</h3>
+                    <ul class="offers-list">
+                        {% for offer in offers %}
+                        <li class="offer-item">
+                            <span class="offer-badge">OFFER</span>
+                            <span class="offer-title">{{ offer.title }}</span>
+                            <p class="offer-description">{{ offer.description }}</p>
+                            {% if offer.discount_percentage %}
+                                <p class="offer-discount">{{ offer.discount_percentage }}% OFF</p>
+                            {% endif %}
+                            {% if offer.valid_until %}
+                                <p class="offer-expiry">Valid until: {{ offer.valid_until|date:"d M Y" }}</p>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
                 <p class="description">{{ laptop.description }}</p>
                 <h2 id="variant-price">
                     {% with first_variant=laptop.variants.first %}
@@ -117,7 +137,43 @@
     </main>
 
     <footer>
-        <p>© 2025 Phonix. All rights reserved.</p>
+        <div class="footer-container">
+            <div class="footer-section connect">
+                <h3>CONNECT WITH US</h3>
+                <div class="newsletter">
+                    <input type="email" placeholder="Enter Email ID">
+                    <button>→</button>
+                </div>
+                <div class="social-icons">
+                    <a><i class="fab fa-youtube"></i></a>
+                    <a><i class="fab fa-facebook-f"></i></a>
+                    <a><i class="fab fa-instagram"></i></a>
+                    <a><i class="fab fa-linkedin-in"></i></a>
+                    <a><i class="fab fa-twitter"></i></a>
+                </div>
+                <p>© Copyright 2025 Phonix. All rights reserved</p>
+            </div>
+    
+            <div class="footer-section useful-links">
+                <h3>USEFUL LINKS</h3>
+                <ul>
+                    <li><a>About Us</a></li>
+                    <li><a>Help & Support</a></li>
+                    <li><a>FAQs</a></li>
+                    <li><a>Return Policy</a></li>
+                    <li><a>Privacy Policy</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-section products">
+                <h3>PRODUCTS</h3>
+                <ul>
+                    <li><a>Phones </a></li>
+                    <li><a>Laptops </a></li>
+                    <li><a>Top Brands</a></li>
+                </ul>
+            </div>
+        </div>
     </footer>
 
     <script>

@@ -7,12 +7,15 @@ from django.db import transaction
 import logging
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
+from datetime import datetime
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from authentication.models import Category,Product,Brand,Variant,ProductImage,Order,Offer
+from authentication.models import Category,Product,Brand,Variant,ProductImage,Order,Offer,Coupon
 from .forms import ProductForm,VariantForm,VariantImageFormSet,OfferForm
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -70,6 +73,8 @@ def admin_panel(request):
 
 #this view for admin dashboard
 def dashboard_view(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
     return render(request, "dashboard.html")
 
 #this view for displaying all users 
@@ -218,11 +223,15 @@ def delete_category(request, category_id):
 
 #this view for brand list
 def brand_list(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
     brands = Brand.objects.all().order_by('-id')  
     return render(request, 'brand_list.html', {'brands': brands})
 
 #this view for add brand list
 def add_brand(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
     if request.method == "POST":
         name = request.POST.get('name')
         description = request.POST.get('description')
@@ -236,7 +245,11 @@ def add_brand(request):
 
 #this view for edit-brand list
 def edit_brand(request, brand_id):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     brand = get_object_or_404(Brand, id=brand_id)
+
     if request.method == "POST":
         brand.name = request.POST.get('name')
         brand.description = request.POST.get('description')
@@ -251,30 +264,30 @@ def edit_brand(request, brand_id):
         brand.status = new_status
         brand.save()
         return redirect('brand_list')
+    
     return render(request, 'edit_brand.html', {'brand': brand})
 
 
 #this view for product list
 def product_list(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     products = Product.objects.filter(is_deleted=False).prefetch_related('variants__images')
-    print(f"Products found: {products.count()}")
-    for product in products:
-        for variant in product.variants.all():
-            for image in variant.images.all():
-                print(f"Product List - Image URL: {image.image.url}")
     return render(request, 'product_list.html', {'products': products})
 
+#this view for adding new product 
 def add_product(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     categories = Category.objects.all()
     brands = Brand.objects.all()
+
     if request.method == "POST":
-        print("POST data:", request.POST)
-        print("FILES:", request.FILES)
-        # Product form
         form = ProductForm(request.POST)
         if form.is_valid():
             product = form.save()
-            # Extract variant data from arrays
             rams = request.POST.getlist('ram[]')
             storages = request.POST.getlist('storage[]')
             colors = request.POST.getlist('color[]')
@@ -319,7 +332,6 @@ def add_product(request):
                             image=image_file
                         )
                 else:
-                    print("Variant form errors:", variant_form.errors)
                     product.delete()
                     messages.error(request, f"Errors in Variant {i+1}: {variant_form.errors}")
                     return render(request, 'add_product.html', {
@@ -330,7 +342,6 @@ def add_product(request):
             messages.success(request, "Product and variants added successfully!")
             return redirect('product_list')
         else:
-            print("Product form errors:", form.errors)
             messages.error(request, "Please correct the errors in the product details.")
     else:
         form = ProductForm()
@@ -343,7 +354,11 @@ def add_product(request):
 
 #this view for edit-product list
 def edit_product(request, product_id):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     product = get_object_or_404(Product, id=product_id, is_deleted=False)
+
     categories = Category.objects.all()
     brands = Brand.objects.all()
     variants = product.variants.all()
@@ -354,7 +369,6 @@ def edit_product(request, product_id):
         product.category_id = request.POST.get("category")
         product.brand_id = request.POST.get("brand")
         product.save()
-        print(f"Save called for Product: {product.name}")
 
         rams = request.POST.getlist('ram[]')
         storages = request.POST.getlist('storage[]')
@@ -362,9 +376,6 @@ def edit_product(request, product_id):
         prices = request.POST.getlist('price[]')
         stocks = request.POST.getlist('stock[]')
         variant_ids = request.POST.getlist('variant_id[]')
-
-        # Debug all FILES keys
-        print(f"FILES received: {request.FILES.keys()}")
 
         for i in range(len(rams)):
             variant_data = {
@@ -381,20 +392,16 @@ def edit_product(request, product_id):
                 variant.save()
                 # Handle images for existing variant
                 image_files = request.FILES.getlist(f'variant_images_{i+1}[]')
-                print(f"Variant {variant.id} (existing) - Expected key: 'variant_images_{i+1}[]', Found {len(image_files)} files")
                 for image_file in image_files:
                     img = ProductImage(variant=variant, image=image_file)
                     img.save()
-                    print(f"New image saved for existing variant: {img.image.url}")
             else:  # New variant
                 variant = Variant(product=product, **variant_data)
                 variant.save()
                 image_files = request.FILES.getlist(f'variant_images_{i+1}[]')
-                print(f"Variant {variant.id} (new) - Expected key: 'variant_images_{i+1}[]', Found {len(image_files)} files")
                 for image_file in image_files:
                     img = ProductImage(variant=variant, image=image_file)
                     img.save()
-                    print(f"New image saved for new variant: {img.image.url}")
 
         removed_images = request.POST.get("removed_images", "").split(",")
         for image_id in removed_images:
@@ -404,12 +411,6 @@ def edit_product(request, product_id):
         messages.success(request, "Product updated successfully!")
         return redirect('product_list')
 
-    print(f"Variants found: {variants.count()}")
-    for variant in variants:
-        print(f"Variant {variant.id} has {variant.images.count()} images")
-        for image in variant.images.all():
-            print(f"Edit Product - Image URL: {image.image.url}")
-
     context = {
         'product': product,
         'categories': categories,
@@ -418,7 +419,7 @@ def edit_product(request, product_id):
     }
     return render(request, 'edit_product.html', context)
 
-#this view for add-varient list
+#this view for adding new varient for the product
 @csrf_exempt
 def add_variant(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -439,19 +440,19 @@ def add_variant(request, product_id):
 
 logger = logging.getLogger(__name__)
 
-#this view for delete-product list
+#this view for deleteting product 
 @require_POST
 def delete_product(request, product_id):
+    if not request.user.is_staff:
+        return redirect("admin_login")
     try:
         # Log the incoming request details
         logger.info(f"Delete product request received for product {product_id}")
         logger.info(f"Request method: {request.method}")
         logger.info(f"Request body: {request.body}")
 
-        # Fetch the product
         product = get_object_or_404(Product, id=product_id)
         
-        # Soft delete
         product.is_deleted = True
         product.status = False
         product.save()
@@ -474,6 +475,8 @@ import json
 #this view for toggle-status list
 @require_POST
 def toggle_product_status(request, product_id):
+    if not request.user.is_staff:
+        return redirect("admin_login")
     try:
         # Log the incoming request details
         logger.info(f"Toggle status request received for product {product_id}")
@@ -488,7 +491,6 @@ def toggle_product_status(request, product_id):
             logger.error("Failed to parse JSON from request body")
             return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
 
-        # Fetch the product
         product = get_object_or_404(Product, id=product_id)
         
         # Toggle status
@@ -508,54 +510,50 @@ def toggle_product_status(request, product_id):
             "error": str(e)
         }, status=500)
 
-@never_cache
+#this view for seeing all orders list
 def order_list(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
     orders_queryset = Order.objects.all().order_by('-created_at')
     raw_statuses = Order.objects.values('id', 'status')
-    print(f"Raw DB statuses at {timezone.now()}: {list(raw_statuses)}")
     
-    # Add pagination - 5 orders per page
     paginator = Paginator(orders_queryset, 5)
     page = request.GET.get('page', 1)
     
     try:
         orders = paginator.page(page)
     except PageNotAnInteger:
-        # If page is not an integer, deliver first page
         orders = paginator.page(1)
     except EmptyPage:
-        # If page is out of range, deliver last page
         orders = paginator.page(paginator.num_pages)
     
-    print(f"Orders fetched at {timezone.now()}: {[(order.id, order.status) for order in orders]}")
     return render(request, 'order.html', {'orders': orders})
 
-@csrf_exempt  # Remove if using CSRF token
+#this view for changing the order status
+@csrf_exempt  
 def update_order_status(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Invalid request method"})
     
     order_id = request.POST.get("order_id")
     status = request.POST.get("status")
-    print(f"Received update request - Order {order_id} to {status}")
     
     try:
         order = Order.objects.get(id=order_id)
         old_status = order.status
-        print(f"Before update - Order {order_id}: {old_status}")
         if old_status != status:
-            order.status = status  # Same as shell
+            order.status = status  
             if status == "Cancelled" and old_status in ["Pending", "Confirmed", "Shipped"]:
                 for item in order.items.all():
                     product = item.product
-                    print(f"Incrementing stock - Product {product.id}: {product.stock} + {item.quantity}")
                     product.stock += item.quantity
                     product.quantity = product.stock
                     product.save()
-            order.save()  # Same as shell
-            # Verify immediately
-            updated_order = Order.objects.get(id=order_id)
-            print(f"After save - Order {order_id}: {updated_order.status}")           
+            order.save()  
+            updated_order = Order.objects.get(id=order_id)         
             if updated_order.status != status:
                 print(f"WARNING: Status mismatch - Expected {status}, Got {updated_order.status}")
         return JsonResponse({"success": True, "status": updated_order.status})
@@ -565,39 +563,29 @@ def update_order_status(request):
         print(f"Error updating order {order_id}: {str(e)}")
         return JsonResponse({"success": False, "error": str(e)})
 
-# views.py (admin side)
-@login_required
-@csrf_protect
-@require_POST
-@login_required
+#this view for approval for returning
 @csrf_protect
 @require_POST
 def approve_return(request, order_id):
-    print(f"Approve return endpoint hit for Order {order_id} at {timezone.now()}")
+    if not request.user.is_staff:
+        return redirect("admin_login")
     try:
         order = Order.objects.get(id=order_id)
-        print(f"Order {order_id} found - Current status: {order.status}")
         
         if order.status != "Return Requested":
-            print(f"Order {order_id} not eligible for return - Status: {order.status}")
             return JsonResponse({"success": False, "message": "Order is not in Return Requested status"})
         
         print(f"Approving return for Order {order_id} - Current status: {order.status}")
-        
-        # Update order status
         order.status = "Returned"
         order.save()
         
-        # Return inventory to stock
         for item in order.items.all():
             product = item.product
-            print(f"Incrementing stock - Product {product.id}: {product.stock} + {item.quantity}")
             product.stock += item.quantity
-            product.quantity = product.stock  # Sync quantity with stock
+            product.quantity = product.stock  
             product.save()
         
         updated_order = Order.objects.get(id=order_id)
-        print(f"Return approved - Order {order_id} now: {updated_order.status}")
         
         return JsonResponse({
             "success": True, 
@@ -607,41 +595,44 @@ def approve_return(request, order_id):
     except Order.DoesNotExist:
         return JsonResponse({"success": False, "message": "Order not found"})
     except Exception as e:
-        print(f"Error approving return for order {order_id}: {str(e)}")
         return JsonResponse({"success": False, "message": str(e)})
     
+#this view for seeing all orders details
 def order_detail(request, order_id):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     order = get_object_or_404(Order, id=order_id)
     return render(request, 'order_fulldetail.html', {'order': order})
 
-# views.py (admin side)
+#this view for updating stock for the varients
 def get_product_quantities(request):
-    # Fetch stock from Variant model, linked to non-deleted Products
+    if not request.user.is_staff:
+        return redirect("admin_login")
+
     variants = Variant.objects.filter(product__is_deleted=False).values('product__id', 'stock')
-    # Aggregate stock by product ID (e.g., sum stock across all variants)
+    # Aggregate(sum) stock by product ID 
     stocks = {}
     for variant in variants:
         product_id = str(variant['product__id'])
         stock = variant['stock']
         if product_id in stocks:
-            stocks[product_id] += stock  # Sum stock if multiple variants
+            stocks[product_id] += stock  
         else:
             stocks[product_id] = stock
-    print(f"Stocks fetched: {stocks}")
-    return JsonResponse({'stocks': stocks})  # Ensure key is 'stocks' to match JS
+    return JsonResponse({'stocks': stocks})  
 
-@staff_member_required
+#this view for seeing all offer details
 def offer_management(request):
-    """
-    Manage offers with filtering by type (Category or Product)
-    """
+    if not request.user.is_staff:
+        return redirect("admin_login")
+   
     offer_type = request.GET.get('type', 'CATEGORY')
     
     # Validate offer type
     if offer_type not in ['CATEGORY', 'PRODUCT']:
         offer_type = 'CATEGORY'
     
-    # Filter offers based on type
     if offer_type == 'CATEGORY':
         offers = Offer.objects.filter(scope='CATEGORY').select_related('category')
     else:
@@ -653,26 +644,26 @@ def offer_management(request):
     }
     return render(request, 'offer.html', context)
 
-    @staff_member_required
-    def add_offer(request):
-        """
-        Add a new offer (Category or Product)
-        """
-        if request.method == 'POST':
-            form = OfferForm(request.POST)
-            if form.is_valid():
-                form.save()
-                return redirect('offer_management')
-        else:
-            form = OfferForm()
+#this view for adding  offer 
+def add_offer(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
+    if request.method == 'POST':
+        form = OfferForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('offer_management')
+    else:
+        form = OfferForm()
         
-        return render(request, 'add_offer.html', {'form': form})
+    return render(request, 'add_offer.html', {'form': form})
 
-@staff_member_required
+#this view for edditing  offer 
 def edit_offer(request, offer_id):
-    """
-    Edit an existing offer
-    """
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     offer = get_object_or_404(Offer, id=offer_id)
     
     if request.method == 'POST':
@@ -685,12 +676,12 @@ def edit_offer(request, offer_id):
     
     return render(request, 'edit_offer.html', {'form': form})
 
-@staff_member_required
+#this view for deletting  offer 
 @require_http_methods(["POST"])
 def delete_offer(request, offer_id):
-    """
-    Delete an offer
-    """
+    if not request.user.is_staff:
+        return redirect("admin_login")
+ 
     try:
         with transaction.atomic():
             offer = get_object_or_404(Offer, id=offer_id)
@@ -706,12 +697,11 @@ def delete_offer(request, offer_id):
             'message': str(e)
         }, status=400)
     
+#this view for adding  offer 
 def add_offer(request):
-    """
-    View to handle adding a new offer.
-    Displays the form on GET request and processes it on POST request.
-    """
-    # Fetch categories and products for the form dropdowns
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
     categories = Category.objects.all()
     products = Product.objects.all()
 
@@ -719,26 +709,168 @@ def add_offer(request):
         form = OfferForm(request.POST)
         if form.is_valid():
             try:
-                # Save the offer
+                
                 offer = form.save()
                 messages.success(request, f"Offer '{offer.name}' created successfully!")
-                return redirect('offer_management')  # Redirect to offer list page
+                return redirect('offer_management')  
             except Exception as e:
                 messages.error(request, f"Error creating offer: {str(e)}")
         else:
-            # If form is invalid, display errors
             messages.error(request, "Please correct the errors below.")
     else:
-        # For GET request, initialize an empty form
         form = OfferForm()
 
-    # Context for template
     context = {
         'form': form,
         'categories': categories,
         'products': products,
     }
     return render(request, 'add_offer.html', context)
+
+def is_admin(user):
+    return user.is_superuser or user.is_staff
+
+#this view for seeing  coupon 
+def coupon_list(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
+    search_query = request.GET.get('search', '')
+    
+    if search_query:
+        coupons = Coupon.objects.filter(
+            Q(code__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        ).order_by('-created_at')
+    else:
+        coupons = Coupon.objects.all().order_by('-created_at')
+    
+    page = request.GET.get('page', 1)
+    paginator = Paginator(coupons, 10)  # Show 10 coupons per page
+    
+    try:
+        coupons = paginator.page(page)
+    except PageNotAnInteger:
+        coupons = paginator.page(1)
+    except EmptyPage:
+        coupons = paginator.page(paginator.num_pages)
+    
+    context = {
+        'coupons': coupons,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'coupon_list.html', context)
+
+#this view for adding  coupon 
+def add_coupon(request):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        description = request.POST.get('description')
+        discount_type = request.POST.get('discount_type')
+        discount_value = request.POST.get('discount_value')
+        min_purchase_amount = request.POST.get('min_purchase_amount')
+        max_discount_amount = request.POST.get('max_discount_amount') or None
+        valid_from = request.POST.get('valid_from')
+        valid_until = request.POST.get('valid_until')
+        usage_limit = request.POST.get('usage_limit') or None
+        per_user_limit = request.POST.get('per_user_limit')
+        is_active = 'is_active' in request.POST
+        
+        if not code:
+            messages.error(request, "Coupon code is required")
+            return render(request, 'add_coupon.html')
+        
+        if Coupon.objects.filter(code=code).exists():
+            messages.error(request, "Coupon code already exists")
+            return render(request, 'add_coupon.html')
+        
+        try:
+            coupon = Coupon(
+                code=code,
+                description=description,
+                discount_type=discount_type,
+                discount_value=discount_value,
+                min_purchase_amount=min_purchase_amount,
+                max_discount_amount=max_discount_amount,
+                valid_from=valid_from,
+                valid_until=valid_until,
+                usage_limit=usage_limit,
+                per_user_limit=per_user_limit,
+                is_active=is_active
+            )
+            coupon.save()
+            messages.success(request, "Coupon added successfully")
+            return redirect('coupon_list')
+        except Exception as e:
+            messages.error(request, f"Error adding coupon: {str(e)}")
+            return render(request, 'add_coupon.html')
+    
+    return render(request, 'add_coupon.html')
+
+#this view for edditing  coupon
+def edit_coupon(request, coupon_id):
+    if not request.user.is_staff:
+        return redirect("admin_login")
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    
+    if request.method == 'POST':
+        coupon.code = request.POST.get('code')
+        coupon.description = request.POST.get('description')
+        coupon.discount_type = request.POST.get('discount_type')
+        coupon.discount_value = request.POST.get('discount_value')
+        coupon.min_purchase_amount = request.POST.get('min_purchase_amount')
+        
+        max_discount = request.POST.get('max_discount_amount')
+        coupon.max_discount_amount = max_discount if max_discount else None
+        
+        coupon.valid_from = request.POST.get('valid_from')
+        coupon.valid_until = request.POST.get('valid_until')
+        
+        usage_limit = request.POST.get('usage_limit')
+        coupon.usage_limit = usage_limit if usage_limit else None
+        
+        coupon.per_user_limit = request.POST.get('per_user_limit')
+        coupon.is_active = 'is_active' in request.POST
+        
+        if Coupon.objects.filter(code=coupon.code).exclude(id=coupon_id).exists():
+            messages.error(request, "Coupon code already exists")
+            return render(request, 'edit_coupon.html', {'coupon': coupon})
+        
+        try:
+            coupon.save()
+            messages.success(request, "Coupon updated successfully")
+            return redirect('coupon_list')
+        except Exception as e:
+            messages.error(request, f"Error updating coupon: {str(e)}")
+    
+    context = {
+        'coupon': coupon
+    }
+    
+    return render(request, 'edit_coupon.html', context)
+
+#this view for deleting  coupon 
+def delete_coupon(request, coupon_id):
+    if not request.user.is_staff:
+        return redirect("admin_login")      
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    
+    try:
+        if coupon.usage_count > 0:
+            coupon.is_active = False
+            coupon.save()
+            messages.success(request, f"Coupon '{coupon.code}' has been deactivated since it has already been used")
+        else:
+            coupon.delete()
+            messages.success(request, f"Coupon '{coupon.code}' deleted successfully")
+    except Exception as e:
+        messages.error(request, f"Error deleting coupon: {str(e)}")
+    
+    return redirect('coupon_list')
     
 #this view for admin-logout
 def admin_logout(request):

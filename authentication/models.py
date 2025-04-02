@@ -607,3 +607,176 @@ class Offer(models.Model):
         
         # Return the maximum discount, or 0 if no offers apply
         return max(product_discount, category_discount) if (product_offer or category_offer) else Decimal('0.00')
+    
+class Coupon(models.Model):
+    DISCOUNT_TYPES = [
+        ('PERCENTAGE', 'Percentage Discount'),
+        ('FIXED', 'Fixed Amount Discount'),
+    ]
+    
+    code = models.CharField(max_length=50, unique=True, help_text="Unique coupon code")
+    description = models.TextField(blank=True, null=True, help_text="Description of the coupon")
+    discount_type = models.CharField(
+        max_length=20, 
+        choices=DISCOUNT_TYPES, 
+        default='PERCENTAGE',
+        help_text="Type of discount (Percentage or Fixed amount)"
+    )
+    discount_value = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        help_text="Value of the discount (percentage or fixed amount)"
+    )
+    min_purchase_amount = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00,
+        validators=[MinValueValidator(0)],
+        help_text="Minimum purchase amount required to use this coupon"
+    )
+    max_discount_amount = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0)],
+        help_text="Maximum discount amount (for percentage discounts)"
+    )
+    valid_from = models.DateTimeField(help_text="Start date and time of coupon validity")
+    valid_until = models.DateTimeField(help_text="End date and time of coupon validity")
+    usage_limit = models.PositiveIntegerField(
+        null=True, 
+        blank=True,
+        help_text="Total number of times this coupon can be used (null for unlimited)"
+    )
+    usage_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of times this coupon has been used"
+    )
+    per_user_limit = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of times a single user can use this coupon"
+    )
+    is_active = models.BooleanField(default=True, help_text="Whether this coupon is currently active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.code} - {self.get_discount_type_display()} ({self.discount_value})"
+    
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        from django.utils import timezone
+        
+        # Validate date range
+        if self.valid_from and self.valid_until and self.valid_from >= self.valid_until:
+            raise ValidationError("Start date must be before end date")
+        
+        # Validate percentage discount
+        if self.discount_type == 'PERCENTAGE' and self.discount_value > 100:
+            raise ValidationError("Percentage discount cannot exceed 100%")
+            
+        # Validate max_discount_amount for percentage discounts
+        if self.discount_type == 'PERCENTAGE' and not self.max_discount_amount:
+            raise ValidationError("Maximum discount amount is required for percentage discounts")
+    
+    def is_valid(self, user=None, cart_total=None):
+        """
+        Check if the coupon is currently valid and can be applied
+        
+        Args:
+            user (CustomUser, optional): The user applying the coupon
+            cart_total (Decimal, optional): The total cart amount
+            
+        Returns:
+            tuple: (is_valid (bool), error_message (str or None))
+        """
+        now = timezone.now()
+        
+        # Check if coupon is active
+        if not self.is_active:
+            return False, "This coupon is inactive"
+            
+        # Check date validity
+        if now < self.valid_from:
+            return False, "This coupon is not yet valid"
+            
+        if now > self.valid_until:
+            return False, "This coupon has expired"
+            
+        # Check usage limits
+        if self.usage_limit is not None and self.usage_count >= self.usage_limit:
+            return False, "This coupon has reached its usage limit"
+            
+        # Check user-specific validity if user is provided
+        if user:
+            # Check per-user limit
+            user_usage_count = CouponUsage.objects.filter(
+                coupon=self,
+                user=user
+            ).count()
+            
+            if user_usage_count >= self.per_user_limit:
+                return False, "You have already used this coupon the maximum number of times"
+        
+        # Check minimum purchase amount if cart_total is provided
+        if cart_total is not None and cart_total < self.min_purchase_amount:
+            return False, f"Minimum purchase of ₹{self.min_purchase_amount} required to use this coupon"
+            
+        return True, None
+    
+    def calculate_discount(self, amount):
+        """
+        Calculate the discount amount for a given purchase amount
+        
+        Args:
+            amount (Decimal): The amount to apply the discount to
+            
+        Returns:
+            Decimal: The discount amount
+        """
+        if self.discount_type == 'PERCENTAGE':
+            discount = (self.discount_value / 100) * amount
+            # Apply max discount cap if set
+            if self.max_discount_amount and discount > self.max_discount_amount:
+                return self.max_discount_amount
+            return discount
+        else:  # FIXED
+            return min(self.discount_value, amount)  # Don't exceed the cart total
+            
+    class Meta:
+        ordering = ['-created_at']
+
+
+class CouponUsage(models.Model):
+    """Track individual usage of coupons by users"""
+    coupon = models.ForeignKey(
+        Coupon, 
+        on_delete=models.CASCADE,
+        related_name='usages'
+    )
+    user = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.CASCADE,
+        related_name='coupon_usages'
+    )
+    order = models.ForeignKey(
+        'Order',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='coupon_usages'
+    )
+    used_at = models.DateTimeField(auto_now_add=True)
+    discount_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Amount discounted by this coupon"
+    )
+    
+    def __str__(self):
+        return f"{self.coupon.code} used by {self.user.username} on {self.used_at}"
+    
+    class Meta:
+        unique_together = ('coupon', 'order')
+        ordering = ['-used_at']

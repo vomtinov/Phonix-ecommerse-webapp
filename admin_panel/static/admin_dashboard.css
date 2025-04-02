@@ -1,0 +1,132 @@
+/* Reset default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    min-height: 100vh;
+    background-color: #ECF0F1; /* Set the body background to match the content area */
+}
+
+/* Sidebar Styles */
+.sidebar {
+    background-color: #2C3E50; /* Dark blue/gray background */
+    color: #FFFFFF; /* White text */
+    width: 250px; /* Default width of the sidebar */
+    padding: 20px;
+    transition: width 0.3s ease; /* Smooth transition for collapsing */
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000; /* Ensure sidebar is above the content */
+}
+
+.sidebar.collapsed {
+    width: 60px; /* Collapsed width */
+}
+
+.sidebar h2 {
+    font-size: 1.5rem; /* 24px */
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.sidebar.collapsed h2 {
+    display: none; /* Hide the title when collapsed */
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    margin: 15px 0;
+}
+
+.sidebar ul li a {
+    color: #FFFFFF; /* White text for links */
+    text-decoration: none;
+    font-size: 1rem; /* 16px */
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #34495E; /* Slightly lighter shade on hover */
+}
+
+.sidebar.collapsed ul li a {
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0; /* Hide text when collapsed */
+}
+
+.sidebar.collapsed ul li a::before {
+    font-size: 1rem; /* Show only icons or first letter when collapsed */
+    content: attr(data-icon); /* You can add a data-icon attribute to your <a> tags for icons */
+}
+
+/* Toggle Button */
+.toggle-btn {
+    background: none;
+    border: none;
+    color: #FFFFFF;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: block;
+    width: 100%;
+    text-align: left;
+}
+
+/* Main Content Styles */
+.content {
+    margin-left: 250px; /* Match the sidebar width when expanded */
+    padding: 20px; /* Match the admin panel padding */
+    background-color: #ECF0F1; /* Light grayish-blue background */
+    flex-grow: 1;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh; /* Ensure the content area takes full height */
+}
+
+.sidebar.collapsed ~ .content {
+    margin-left: 60px; /* Adjust for collapsed sidebar */
+}
+
+.content h1 {
+    font-size: 2rem; /* 32px */
+    margin-bottom: 10px; /* Space between heading and subtitle */
+    color: #2C3E50; /* Dark color for headings */
+    font-weight: bold; /* Match the bold style in the screenshot */
+}
+
+.content p {
+    font-size: 1rem; /* 16px */
+    color: #7F8C8D; /* Grayish text */
+    font-weight: normal; /* Ensure the subtitle is not bold */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .sidebar.collapsed {
+        width: 50px;
+    }
+
+    .content {
+        margin-left: 200px;
+    }
+
+    .sidebar.collapsed ~ .content {
+        margin-left: 50px;
+    }
+}
