@@ -30,7 +30,7 @@
             <li><a href="{% url 'order_list' %}">Order</a></li>
             <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="">Return</a></li>
-            <li><a href="">Sales Report</a></li>
+            <li><a href="{% url 'sales_report' %}">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>
             
         </ul>
@@ -117,21 +117,16 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if offer.is_currently_active %}
-                                                    <div class="btn-group" role="group">
-                                                        <a href="{% url 'edit_offer' offer.id %}" 
-                                                           class="btn btn-sm btn-primary">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-danger delete-offer" 
-                                                                data-offer-id="{{ offer.id }}">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                {% else %}
-                                                    
-                                                {% endif %}
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'edit_offer' offer.id %}" class="btn btn-sm btn-warning">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </a>
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-danger delete-offer" 
+                                                            data-offer-id="{{ offer.id }}">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% empty %}
@@ -144,6 +139,63 @@
                                 </tbody>
                             </table>
                         </div>
+                        {% if offers.has_other_pages %}
+                            <nav aria-label="Offer pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    {% if offers.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?type={{ offer_type }}&page=1" aria-label="First">
+                                                <span aria-hidden="true">&laquo;&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?type={{ offer_type }}&page={{ offers.previous_page_number }}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&laquo;&laquo;</span>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&laquo;</span>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in offers.paginator.page_range %}
+                                        {% if offers.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > offers.number|add:'-3' and num < offers.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?type={{ offer_type }}&page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if offers.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?type={{ offer_type }}&page={{ offers.next_page_number }}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?type={{ offer_type }}&page={{ offers.paginator.num_pages }}" aria-label="Last">
+                                                <span aria-hidden="true">&raquo;&raquo;</span>
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&raquo;</span>
+                                        </li>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&raquo;&raquo;</span>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
                     </div>
                 </div>
             </main>
@@ -170,14 +222,18 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
                             // AJAX call to delete offer
-                            fetch(`/admin/offer/delete/${offerId}/`, {
-                                method: 'POST',
+                            fetch(`/offer/delete/${offerId}/`, {  // Updated URL to match the defined path                                method: 'POST',
                                 headers: {
-                                    'X-CSRFToken': '{{ csrf_token }}',
+                                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                                     'Content-Type': 'application/json'
                                 }
                             })
-                            .then(response => response.json())
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
                             .then(data => {
                                 if (data.status === 'success') {
                                     Swal.fire(
@@ -248,5 +304,30 @@
             window.dispatchEvent(new Event('resize'));
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            {% if messages %}
+                const messages = [
+                    {% for message in messages %}
+                        {
+                            level: "{{ message.tags }}",
+                            text: "{{ message }}"
+                        },
+                    {% endfor %}
+                ];
+                messages.forEach(message => {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-right',
+                        icon: message.level === 'success' ? 'success' : 'error',
+                        title: message.text,
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                });
+            {% endif %}
+        });
+    </script>
+
 </body>
 </html>

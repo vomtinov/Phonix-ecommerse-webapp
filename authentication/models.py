@@ -14,30 +14,34 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, username, password=None, **extra_fields):
+    def create_user(self, email, username,phone=None, password=None, **extra_fields):
         if not email:
             raise ValueError("Email field is required")
         if not username:
             raise ValueError("Username field is required")
+        # if not phone:
+        #     raise ValueError("Phone field is required")
 
         email = self.normalize_email(email)
-        user = self.model(email=email, username=username, **extra_fields)
+        #extra_fields.setdefault('profile_image', 'default.jpg')
+        user = self.model(email=email, username=username,  phone=phone,**extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username, password):
-        user = self.create_user(email, username, password)
-        user.is_staff = True
-        user.is_superuser = True
-        user.save(using=self._db)
-        return user
+    def create_superuser(self, email, username, phone=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        return self.create_user(email, username, phone, password, **extra_fields)
 
 # Custom User Model
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=100, unique=True)
-    profile_image = models.ImageField(upload_to='profile_images/',default='default.jpg',blank=True, null=True)
+    profile_image = models.ImageField(upload_to='profile_images/',default='profile_images/default.jpg',blank=True, null=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)  
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -92,6 +96,9 @@ class Product(models.Model):
         self.status = False
         self.save()
 
+    def get_display_price(self):
+        variant = self.variants.first()
+        return variant.price if variant else Decimal('0.00')
 
     def save(self, *args, **kwargs):
         # Remove stock reference since it's no longer a field
@@ -220,6 +227,12 @@ class Order(models.Model):
         ('Razorpay', 'Razorpay'),
     ]
 
+    PAYMENT_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Success', 'Success'),
+        ('Failed', 'Failed'),
+    ]
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="orders")
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
@@ -227,6 +240,9 @@ class Order(models.Model):
     transaction_id = models.CharField(max_length=255, blank=True, null=True)  # Only for Razorpay
     shipping_address = models.ForeignKey(Address, on_delete=models.CASCADE) 
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # New field
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='Pending', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

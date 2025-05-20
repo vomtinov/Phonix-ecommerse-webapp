@@ -11,6 +11,11 @@ class UserEditForm(forms.ModelForm):
         model = CustomUser
         fields = ['username', 'email', 'profile_image']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make profile image optional
+        self.fields['profile_image'].required = False
+
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address

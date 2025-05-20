@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.utils.timezone import now
 from datetime import timedelta
-
+from django.views.decorators.cache import cache_control
 
 # Signup View
 def signup_view(request):
@@ -25,8 +25,11 @@ def signup_view(request):
         form = CustomUserCreationForm()
     return render(request, 'signup.html', {'form': form})
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
     """Handles login authentication."""
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -56,6 +59,8 @@ def login_view(request):
         return redirect('home')  # Redirect to home page if successful
 
     return render(request, 'login.html')
+
+
 
 # Logout View
 def logout_view(request):

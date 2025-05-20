@@ -349,7 +349,7 @@ nav a:hover {
 }
 
 /* Footer */
-footer {
+/* footer {
     background-color: #172337;
     color: #ffffff;
     padding: 40px 20px;
@@ -481,7 +481,7 @@ footer {
     .social-icons {
         justify-content: center;
     }
-}
+} */
 
 /* Responsive Design */
 @media (max-width: 768px) {

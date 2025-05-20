@@ -66,6 +66,10 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+#razarpayment
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET =config('RAZORPAY_KEY_SECRET')
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -78,7 +82,7 @@ MIDDLEWARE = [
 ]
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default session engine
-SESSION_COOKIE_AGE = 1209600  # 2 weeks (adjust as needed)
+SESSION_COOKIE_AGE = 120000 # 2 weeks (adjust as needed)
 SESSION_SAVE_EVERY_REQUEST = True  # Optional, saves session on every request
 
 
@@ -123,6 +127,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20,  # Seconds to wait for the lock to be released
+        }
     }
 }
 
@@ -170,7 +177,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Console for dev
 EMAIL_HOST = 'smtp.gmail.com'  # Use your email provider's SMTP server
 EMAIL_PORT = 587  # Typically 587 for TLS
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Replace with your email
+EMAIL_HOST_USER =  config('EMAIL_HOST_USER')  # Replace with your email
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # Use App Password (not your actual email password)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 

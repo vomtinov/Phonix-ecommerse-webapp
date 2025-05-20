@@ -5,10 +5,122 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account Profile</title>
-    <link rel="stylesheet" href="{% static 'account_details.css' %}">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        .cart-count, .wishlist-count {
+            background-color: #ff4444;
+            color: white; 
+            border-radius: 50%;
+            padding: 2px 6px; 
+            font-size: 12px; 
+            margin-left: 5px; 
+            vertical-align: top; 
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #ffffff;
+            color: #111111;
+            line-height: 1.5;
+        }
+        
+        /* Header */
+        header {
+            background-color: #131921;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        header h2 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 18px;
+            margin-left: 25px;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 25px;
+        }
+
+        .search-bar form {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #febd69;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 10px;
+            width: 100%;
+            font-size: 15px;
+        }
+
+        .search-bar button {
+            background-color: #febd69;
+            border: none;
+            color: #111111;
+            font-size: 16px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-bar button:hover {
+            background-color: #f3a847;
+        }
+
+        #clearSearch {
+            color: #555555;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        nav a {
+            color: #ffffff;
+            font-size: 20px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #febd69;
+        }
+
         .cart-count, .wishlist-count {
             background-color: #ff4444; /* Red background */
             color: white; /* White text */
@@ -18,11 +130,483 @@
             margin-left: 5px; /* Margin to separate from the icon */
             vertical-align: top; /* Align with the icon */
         }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #ffffff;
+            min-width: 140px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: #111111;
+            padding: 12px 20px;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f5f5f5;
+            color: #e47911;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Responsive Design for Header */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .search-bar {
+                margin: 15px 0;
+                width: 100%;
+            }
+
+            nav {
+                gap: 20px;
+            }
+        }
+        /* Enhanced Responsive Container Layout */
+        .container-fluid {
+            padding: 0;
+        }
+
+        .content-wrapper {
+            display: flex;
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Responsive Sidebar Styles */
+        .sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            padding: 20px;
+            width: 250px;
+            min-height: 100%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #1f2937;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #f3f4f6;
+            color: #2563eb;
+        }
+
+        .sidebar ul li a.active {
+            background-color: #e0f2fe;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .sidebar .logout-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar .logout-btn:hover {
+            background-color: #b91c1c;
+        }
+
+        /* Mobile Sidebar Toggle */
+        .mobile-sidebar-toggle {
+            display: none;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Content Styles */
+        .content {
+            flex: 1;
+            padding: 30px;
+            background-color: #f9fafb;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .content h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            letter-spacing: -0.025em;
+        }
+
+        .profile-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-pic:hover {
+            transform: scale(1.05);
+        }
+
+        #displayDetails, #editDetails {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            max-width: 500px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        #displayDetails p {
+            font-size: 16px;
+            color: #4b5563;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        #displayDetails p strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        #editDetails label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        #editDetails input[type="text"],
+        #editDetails input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1f2937;
+            background-color: #f9fafb;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #editDetails input[type="text"]:focus,
+        #editDetails input[type="email"]:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        #editDetails input[type="file"] {
+            display: none;
+        }
+
+        .edit-profile-pic {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 10px 0;
+            transition: background-color 0.2s ease;
+        }
+
+        .edit-profile-pic:hover {
+            background-color: #e5e7eb;
+        }
+
+        #editButton, #editDetails button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        #editButton {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        #editButton:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        #editDetails button[type="submit"] {
+            background-color: #16a34a;
+            color: #ffffff;
+            margin-right: 10px;
+        }
+
+        #editDetails button[type="submit"]:hover {
+            background-color: #15803d;
+            transform: translateY(-1px);
+        }
+
+        #cancelEdit {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+
+        #cancelEdit:hover {
+            background-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        footer {
+            background-color: #172337;
+            color: #ffffff;
+            padding: 40px 20px;
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .newsletter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .newsletter input {
+            padding: 10px;
+            border: 1px solid #ffffff;
+            background-color: transparent;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+
+        .newsletter input::placeholder {
+            color: #cccccc;
+        }
+
+        .newsletter button {
+            background-color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .newsletter button:hover {
+            background-color: #e6e6e6;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .social-icons a {
+            display: inline-block;
+        }
+
+        .social-icons img {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) invert(1); /* Makes icons white */
+        }
+
+        .social-icons a:hover img {
+            filter: brightness(0) invert(0.8); /* Slightly dim on hover */
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-section ul li a:hover {
+            color: #00c4b4; /* Matches the teal color of "Privacy Policy" in the screenshot */
+        }
+
+        /* Enhanced Responsive Design */
+        @media (max-width: 992px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+                padding: 15px;
+            }
+            
+            .sidebar ul {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .sidebar ul li {
+                width: calc(50% - 5px);
+                margin-bottom: 5px;
+            }
+            
+            .sidebar ul li a {
+                justify-content: center;
+                text-align: center;
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .sidebar .logout-btn {
+                text-align: center;
+                margin-top: 10px;
+                width: 100%;
+            }
+        }
+
+        
+        @media (max-width: 576px) {
+            .profile-pic {
+                width: 100px;
+                height: 100px;
+            }
+            
+            #displayDetails p {
+                font-size: 14px;
+            }
+            
+            .edit-profile-pic {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .footer-section {
+                margin-bottom: 30px;
+                width: 100%;
+            }
+
+            .newsletter {
+                justify-content: center;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="/">Phonix</a></h2>
         <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
 
         <div class="search-bar">
@@ -38,67 +622,76 @@
         <nav>
             <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
             <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
-
             <div class="dropdown">
                 <button class="dropbtn"><i class="fas fa-user"></i></button>
                 <div class="dropdown-content">
                     <a href="{% url 'account_profile' %}">Profile</a> 
-                    <a href="/logout">Logout</a>
+                    <a href="{% url 'logout' %}">Logout</a>
                 </div>
             </div>
         </nav>
     </header>
     
-    <div class="container">
-        <aside class="sidebar">
-            <ul>
-                <li><a href="{% url 'account_profile' %}" >Account Overview</a></li>
-                <li><a href="{% url 'order_details' %}">Order Details</a></li>
-                <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
-                <li><a href="/wallet">Wallet</a></li>
-                <li><a href="/wishlist">Wishlist</a></li>
-                <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
-            </ul>
-        </aside>
-        
-        <main class="content" id="mainContent">
-            <h2>Account Overview</h2>
-            <div id="userDetails">
-                {% if user.is_authenticated %}
-                    <div class="profile-container">
-                        <img src="{{ user.profile_image.url|default:'/static/default.jpg' }}" alt="Profile Image" class="profile-pic" id="profileImage">
-                    </div>
+    <div class="container-fluid">
+        <div class="content-wrapper">
+            <button class="mobile-sidebar-toggle" id="toggleSidebar">
+                <i class="fas fa-bars"></i> Menu
+            </button>
             
-                    <form method="POST" id="editForm" enctype="multipart/form-data">
-                        {% csrf_token %}
+            <aside class="sidebar" id="sidebar">
+                <ul>
+                    <li><a href="{% url 'account_profile' %}" class="active">Account Overview</a></li>
+                    <li><a href="{% url 'order_details' %}">Order Details</a></li>
+                    <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
+                    <li><a href="/wallet">Wallet</a></li>
+                    <li><a href="/wishlist">Wishlist</a></li>
+                    <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
+                </ul>
+            </aside>
+            
+            <main class="content" id="mainContent">
+                <h2>Account Overview</h2>
+                <div id="userDetails">
+                    {% if user.is_authenticated %}
+                        <div class="profile-container">
+                            {% if user.profile_image and user.profile_image.url %}
+                                <img src="{{ user.profile_image.url }}" alt="Profile Image" class="profile-pic" id="profileImage">
+                            {% else %}
+                                <img src="{% static 'default.jpg' %}" alt="Profile Image" class="profile-pic" id="profileImage">
+                            {% endif %}
+                        </div>
+                
+                        <form method="POST" id="editForm" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <div id="displayDetails">
+                                <p><strong>Username:</strong> <span id="usernameDisplay">{{ user.username }}</span></p>
+                                <p><strong>Email:</strong> <span id="emailDisplay">{{ user.email }}</span></p>
+                                <button type="button" id="editButton">Edit</button>
+                            </div>
                         
-                        <div id="displayDetails">
-                            <p><strong>Username:</strong> <span id="usernameDisplay">{{ user.username }}</span></p>
-                            <p><strong>Email:</strong> <span id="emailDisplay">{{ user.email }}</span></p>
-                            <button type="button" id="editButton">Edit</button>
-                        </div>
-                    
-                        <div id="editDetails" style="display: none;">
-                            <label><strong>Username:</strong></label>
-                            <input type="text" id="usernameInput" name="username" value="{{ user.username }}" required>
-                    
-                            <label><strong>Email:</strong></label>
-                            <input type="email" id="emailInput" name="email" value="{{ user.email }}" required>
-                    
-                            <label><strong>Profile Image:</strong></label>
-                            <input type="file" id="profileUpload" name="profile_image" accept="image/*" style="display: none;">
-                            <label for="profileUpload" class="edit-profile-pic">Upload Image</label>
-                    
-                            <button type="submit">Save Changes</button>
-                            <button type="button" id="cancelEdit">Cancel</button>
-                        </div>
-                    </form>
-                    
-                {% else %}
-                    <p>Please <a href="/login">login</a> to view your account details.</p>
-                {% endif %}
-            </div>
-        </main>
+                            <div id="editDetails" style="display: none;">
+                                <label><strong>Username:</strong></label>
+                                <input type="text" id="usernameInput" name="username" value="{{ user.username }}" required>
+                        
+                                <label><strong>Email:</strong></label>
+                                <input type="email" id="emailInput" name="email" value="{{ user.email }}" required>
+                        
+                                <label><strong>Profile Image:</strong></label>
+                                <input type="file" id="profileUpload" name="profile_image" accept="image/*" style="display: none;">
+                                <label for="profileUpload" class="edit-profile-pic">Upload Image</label>
+                        
+                                <button type="submit">Save Changes</button>
+                                <button type="button" id="cancelEdit">Cancel</button>
+                            </div>
+                        </form>
+                        
+                    {% else %}
+                        <p>Please <a href="/login">login</a> to view your account details.</p>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
     </div>
     
     <footer>
@@ -141,10 +734,55 @@
         </div>
     </footer>
 
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // 🔹 Search Input & Clear Button
+        const isAuthenticated = {{ user.is_authenticated|lower }};
+        
+        // Toggle sidebar on mobile
+        const toggleSidebar = document.getElementById("toggleSidebar");
+        const sidebar = document.getElementById("sidebar");
+        
+        if (toggleSidebar && sidebar) {
+            toggleSidebar.addEventListener("click", function() {
+                sidebar.classList.toggle("collapsed");
+            });
+        }
+
+        const protectedLinks = [
+            { selector: 'a[href="{% url 'order_details' %}"]', message: 'Please login to view your order details.' },
+            { selector: 'a[href="{% url 'manage_address' %}"]', message: 'Please login to manage your address.' },
+            { selector: 'a[href="/wallet"]', message: 'Please login to view your wallet.' },
+            { selector: 'a[href="/wishlist"]', message: 'Please login to view your wishlist.' },
+            { selector: 'a[href="/cart"]', message: 'Please login to view your cart.' }
+        ];
+
+        protectedLinks.forEach(link => {
+            const element = document.querySelector(link.selector);
+            if (element) {
+                element.addEventListener("click", function (e) {
+                    e.preventDefault(); // Prevent default navigation
+                    if (!isAuthenticated) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Please Login',
+                            text: link.message,
+                            confirmButtonText: 'Login',
+                            showCancelButton: true,
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/login'; // Adjust to your login URL
+                            }
+                        });
+                    } else {
+                        window.location.href = element.getAttribute('href'); // Proceed to the link's href
+                    }
+                });
+            }
+        });
+
+        // Search Input & Clear Button
         let searchInput = document.getElementById("searchInput");
         let clearSearch = document.getElementById("clearSearch");
 
@@ -157,7 +795,7 @@
             clearSearch.style.display = "none";
         });
 
-        // 🔹 Profile Picture Upload & Preview
+        // Profile Picture Upload & Preview
         let profileUpload = document.getElementById("profileUpload");
         let profileImage = document.getElementById("profileImage");
 
@@ -172,7 +810,7 @@
             }
         });
 
-        // 🔹 Edit & Cancel Button Logic
+        // Edit & Cancel Button Logic
         let editButton = document.getElementById("editButton");
         let cancelEdit = document.getElementById("cancelEdit");
         let displayDetails = document.getElementById("displayDetails");
@@ -190,7 +828,7 @@
             editDetails.style.display = "none";
         });
 
-        // 🔹 AJAX Form Submission for Updating Profile
+        // AJAX Form Submission for Updating Profile
         let editForm = document.getElementById("editForm");
         let usernameDisplay = document.getElementById("usernameDisplay");
         let emailDisplay = document.getElementById("emailDisplay");
@@ -245,27 +883,9 @@
             });
         });
 
-        // 🔹 Load Cart and Wishlist Counts
+        // Load Cart and Wishlist Counts
         function loadInitialCounts() {
             fetch('/get_cart_count/', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Initial cart count response:', data);
-                if (data.cart_count !== undefined) {
-                    updateCartCount(data.cart_count);
-                } else {
-                    console.log('No cart_count in initial response, setting to 0');
-                    updateCartCount(0);
-                }
-            })
-            .catch(error => console.error('Error loading cart count:', error));
-        
-            fetch('/get_wishlist_count/', {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -289,8 +909,13 @@
 
         function updateCartCount(count) {
             const cartCountElement = document.querySelector('.cart-count');
-            cartCountElement.textContent = count || '0';
-            console.log('Updated cart count to:', count || '0');
+            if (cartCountElement) {
+                cartCountElement.textContent = count || '0';
+                cartCountElement.style.display = 'inline-block'; // Ensure visibility
+                console.log('Updated cart count to:', count || '0');
+            } else {
+                console.error('Cart count element not found');
+            }
         }
 
         function updateWishlistCount(count) {

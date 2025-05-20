@@ -5,14 +5,811 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ laptop.name }} - Laptop Details</title>
-    <link rel="stylesheet" href="{% static 'mobile product pagee.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'mobile product pagee.css' %}"> {% endcomment %}
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+<style>
+    /* Reset default styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Arial', sans-serif;
+    }
+
+    /* Body */
+    body {
+        background: linear-gradient(135deg, #f7f9fc 0%, #e8ecef 100%);
+        color: #2d2d2d;
+        line-height: 1.7;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Header */
+    header {
+        background-color: #131921;
+        color: white;
+        padding: 15px 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    header h1 a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    header h2 a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 18px;
+        margin-left: 25px;
+        font-weight: 500;
+    }
+
+    .search-bar {
+        flex-grow: 1;
+        margin: 0 25px;
+    }
+
+    .search-bar form {
+        display: flex;
+        align-items: center;
+        background-color: #ffffff;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #febd69;
+    }
+
+    .search-bar input {
+        border: none;
+        outline: none;
+        padding: 10px;
+        width: 100%;
+        font-size: 15px;
+    }
+
+    .search-bar button {
+        background-color: #febd69;
+        border: none;
+        color: #111111;
+        font-size: 16px;
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .search-bar button:hover {
+        background-color: #f3a847;
+    }
+
+    #clearSearch {
+        color: #555555;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    nav {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
+
+    nav a {
+        color: #ffffff;
+        font-size: 20px;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    nav a:hover {
+        color: #febd69;
+    }
+
+    {% comment %} .cart-count, .wishlist-count {
+        background-color: #ff4444; /* Red background */
+        color: white; /* White text */
+        border-radius: 50%; /* Circular shape */
+        padding: 2px 6px; /* Padding for spacing */
+        font-size: 12px; /* Font size */
+        margin-left: 5px; /* Margin to separate from the icon */
+        vertical-align: top; /* Align with the icon */
+    } {% endcomment %}
+
+    .dropdown {
+        position: relative;
+    }
+
+    .dropbtn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #ffffff;
+        min-width: 140px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+    }
+
+    .dropdown-content a {
+        color: #111111;
+        padding: 12px 20px;
+        display: block;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f5f5f5;
+        color: #e47911;
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    /* Main Product Details Section */
+    main {
+        max-width: 1300px;
+        margin: 30px auto;
+        padding: 0 15px;
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    .product-container {
+        display: flex;
+        gap: 40px;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease;
+    }
+
+    .product-container:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Product Gallery */
+    .product-gallery {
+        flex: 1;
+        max-width: 550px;
+        position: relative;
+    }
+
+    .main-image {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #f8f9fa;
+        padding: 10px;
+    }
+
+    .main-image img {
+        max-width: 100%;
+        height: 450px;
+        object-fit: contain;
+        border: none;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .main-image img:hover {
+        transform: scale(1.03);
+    }
+
+    .thumbnail-images {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        border: 2px solid transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f1f3f5;
+        padding: 5px;
+    }
+
+    .thumbnail:hover {
+        border-color: #007bff;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Product Info */
+    .product-info {
+        flex: 1;
+        padding: 15px 0;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .product-info h2 {
+        font-size: 28px;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+    }
+
+    .brand, .category {
+        font-size: 15px;
+        color: #6b7280;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .brand strong, .category strong {
+        color: #111827;
+        font-weight: 600;
+    }
+
+    .description {
+        font-size: 15px;
+        color: #4b5563;
+        margin: 20px 0;
+        line-height: 1.8;
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+
+    .product-info h2:nth-of-type(2) {
+        font-size: 32px;
+        color: #16a34a;
+        font-weight: 700;
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .product-info > * {
+        width: 100%;
+    }
+
+    .stock-status {
+        font-size: 16px;
+        margin: 12px 0;
+        font-weight: 500;
+    }
+
+    .in-stock {
+        color: #16a34a;
+        background: #dcfce7;
+        padding: 6px 12px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    .out-of-stock {
+        color: #dc2626;
+        background: #fee2e2;
+        padding: 6px 12px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    /* Variants Table */
+    .product-info h3 {
+        font-size: 20px;
+        color: #111827;
+        margin: 25px 0 12px;
+        font-weight: 600;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-bottom: 25px;
+        background: #f8fafc;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+    }
+
+    th {
+        background: #007bff;
+        color: #ffffff;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 13px;
+    }
+
+    td {
+        color: #374151;
+        background: #ffffff;
+        transition: background 0.2s ease;
+    }
+
+    .variant-row:hover td {
+        background: #eff6ff;
+    }
+
+    #variant-price .original-price {
+        text-decoration: line-through;
+        color: #9ca3af;
+        margin-right: 12px;
+        font-size: 18px;
+    }
+
+    #variant-price .discounted-price {
+        color: #16a34a;
+        margin-right: 12px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    #variant-price .discount-percentage {
+        color: #ffffff;
+        background: #dc2626;
+        font-size: 14px;
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    #variant-price .regular-price {
+        color: #111827;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    /* Buttons */
+    .buy-now, .add-to-cart {
+        display: inline-block;
+        padding: 14px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-right: 12px;
+        margin-top: 10px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .buy-now {
+        background: linear-gradient(90deg, #f97316, #fb923c);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+    }
+
+    .buy-now:hover {
+        background: linear-gradient(90deg, #fb923c, #f97316);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4);
+    }
+
+    .add-to-cart {
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .add-to-cart:hover {
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+    }
+
+    .add-to-cart i {
+        margin-right: 10px;
+    }
+
+    /* Offers Section */
+    .offers-container {
+        margin: 25px 0;
+        clear: both;
+        width: 100%;
+        display: block;
+        overflow: hidden;
+        background: #fefce8;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .offers-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .offer-item {
+        margin-bottom: 15px;
+        clear: both;
+        padding: 15px;
+        background: #ffffff;
+        border-radius: 8px;
+        transition: transform 0.2s ease;
+    }
+
+    .offer-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    .offer-badge {
+        display: inline-block;
+        background: #ef4444;
+        color: #ffffff;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+
+    .offer-title {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 16px;
+    }
+
+    .offer-description {
+        margin: 8px 0;
+        color: #4b5563;
+        font-size: 14px;
+    }
+
+    .offer-discount {
+        color: #16a34a;
+        font-weight: 600;
+        margin: 8px 0;
+        font-size: 15px;
+    }
+
+    .offer-expiry {
+        font-size: 13px;
+        color: #6b7280;
+        margin-top: 8px;
+    }
+
+    #variant-price {
+        display: block;
+        width: 100%;
+        margin: 25px 0;
+        line-height: 1.6;
+        clear: both;
+        overflow: hidden;
+    }
+
+    #variant-price span {
+        display: inline-block;
+        vertical-align: middle;
+        margin-bottom: 8px;
+    }
+
+    .info-icon {
+        font-size: 14px;
+        color: #6b7280;
+        cursor: help;
+        background: #e5e7eb;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        line-height: 20px;
+    }
+
+    /* Zoom-related styles */
+    .zoom-view {
+        width: 600px;
+        height: 456px;
+        border: 1px solid #e5e7eb;
+        display: none;
+        overflow: hidden;
+        background-repeat: no-repeat;
+        background-position: center;
+        position: absolute;
+        top: 0;
+        left: 420px;
+        z-index: 1000;
+        background-color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-image {
+        width: 400px;
+        height: 456px;
+        cursor: crosshair;
+        position: relative;
+        display: flex;
+        justify-content: center;
+    }
+
+    .main-image img {
+        width: 75%;
+        height: 100%;
+        object-fit: fill;
+        display: block;
+    }
+
+    /* Footer */
+    footer {
+        background-color: #172337;
+        color: #ffffff;
+        padding: 20px 0;
+        margin-top: 40px;
+        border-top: 1px solid #2a3e5b;
+    }
+
+    .footer-container {
+        display: flex;
+        justify-content: space-around;
+        max-width: 1200px;
+        margin: 0 auto;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding: 0 20px;
+    }
+
+    .footer-section {
+        flex: 1;
+        min-width: 150px;
+        text-align: center;
+    }
+
+    .footer-section h3 {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        color: #ffffff;
+    }
+
+    .connect .newsletter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+
+    .connect .newsletter input {
+        padding: 8px 12px;
+        border: 1px solid #ffffff;
+        background-color: transparent;
+        color: #ffffff;
+        font-size: 12px;
+        width: 180px;
+        border-radius: 4px 0 0 4px;
+        outline: none;
+    }
+
+    .connect .newsletter input::placeholder {
+        color: #cccccc;
+    }
+
+    .connect .newsletter button {
+        background-color: #ffffff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #172337;
+    }
+
+    .connect .newsletter button:hover {
+        background-color: #e6e6e6;
+    }
+
+    .connect .social-icons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+
+    .connect .social-icons a {
+        color: #ffffff;
+        font-size: 18px;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .connect .social-icons a:hover {
+        color: #00c4b4;
+    }
+
+    .connect .social-icons i {
+        font-size: 18px;
+    }
+
+    .footer-section p {
+        font-size: 10px;
+        color: #cccccc;
+        margin-top: 10px;
+        border-top: 1px solid #2a3e5b;
+        padding-top: 10px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .footer-section ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .footer-section ul li {
+        margin-bottom: 8px;
+    }
+
+    .footer-section ul li a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 12px;
+        transition: color 0.2s;
+    }
+
+    .footer-section ul li a:hover {
+        color: #00c4b4;
+    }
+
+    /* Responsive Design for Footer */
+    @media (max-width: 768px) {
+        .footer-container {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .footer-section {
+            margin-bottom: 20px;
+        }
+
+        .connect .newsletter {
+            flex-direction: column;
+        }
+
+        .connect .newsletter input {
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .connect .newsletter button {
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .connect .social-icons {
+            justify-content: center;
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .product-container {
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .main-image img {
+            height: 350px;
+        }
+
+        .thumbnail {
+            width: 70px;
+            height: 70px;
+        }
+
+        .product-info h2 {
+            font-size: 24px;
+        }
+
+        .product-info h2:nth-of-type(2) {
+            font-size: 28px;
+        }
+
+        .buy-now, .add-to-cart {
+            width: 100%;
+            margin: 8px 0;
+            padding: 12px;
+        }
+
+        .zoom-view {
+            display: none !important;
+        }
+    }
+
+    /* Animation Keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Toast and Counter Styles */
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    .cart-count, .wishlist-count {
+        display: inline-block;
+        min-width: 16px;
+        height: 16px;
+        background-color: #ff4444;
+        color: white;
+        border-radius: 50%;
+        font-size: 10px;
+        line-height: 16px;
+        text-align: center;
+        position: relative;
+        top: -8px;
+        right: 5px;
+        padding: 0 4px;
+    }
+
+    .cart-count:empty, .wishlist-count:empty {
+        display: none;
+    }
+
+    nav a {
+        position: relative;
+        margin: 0 10px;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .variant-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .variant-row:hover {
+        background-color: #f5f5f5;
+    }
+    .variant-row.selected {
+        background-color: #e0e0e0;
+    }
+</style>
 <body>
     <header>
-        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="/">Phonix</a></h2>
         <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+
         <div class="search-bar">
             <form action="{% url 'search_products' %}" method="GET" id="searchForm">
                 <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
@@ -22,6 +819,7 @@
                 </button>
             </form>
         </div>
+
         <nav>
             <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
             <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
@@ -29,7 +827,7 @@
                 <button class="dropbtn"><i class="fas fa-user"></i></button>
                 <div class="dropdown-content">
                     <a href="{% url 'account_profile' %}">Profile</a> 
-                    <a href="/logout">Logout</a>
+                    <a href="{% url 'logout' %}">Logout</a>
                 </div>
             </div>
         </nav>
@@ -42,6 +840,7 @@
                     {% if first_variant and first_variant.images.exists %}
                         <div class="main-image">
                             <img id="main-img" src="{{ first_variant.images.first.image.url }}" alt="{{ laptop.name }}">
+                            <div class="zoom-view" id="zoomView"></div>
                         </div>
                         <div class="thumbnail-images">
                             {% for image in first_variant.images.all %}
@@ -70,10 +869,12 @@
                         {% for offer in offers %}
                         <li class="offer-item">
                             <span class="offer-badge">OFFER</span>
-                            <span class="offer-title">{{ offer.title }}</span>
+                            <span class="offer-title">{{ offer.name }}</span>
                             <p class="offer-description">{{ offer.description }}</p>
-                            {% if offer.discount_percentage %}
-                                <p class="offer-discount">{{ offer.discount_percentage }}% OFF</p>
+                            {% if offer.offer_type == 'PERCENTAGE' %}
+                                <p class="offer-discount">{{ offer.discount }}% OFF</p>
+                            {% else %}
+                                <p class="offer-discount">₹{{ offer.discount }} OFF</p>
                             {% endif %}
                             {% if offer.valid_until %}
                                 <p class="offer-expiry">Valid until: {{ offer.valid_until|date:"d M Y" }}</p>
@@ -85,11 +886,18 @@
                 {% endif %}
                 <p class="description">{{ laptop.description }}</p>
                 <h2 id="variant-price">
-                    {% with first_variant=laptop.variants.first %}
-                        Price: ₹{{ first_variant.price|default:'N/A' }}
-                    {% endwith %}
+                    {% if discounted_price and discounted_price < original_price %}
+                        Price: <span class="original-price">₹{{ original_price }}</span>
+                        <span class="discounted-price">₹{{ discounted_price }}</span>
+                        <span class="discount-percentage">{{ discount_percentage }}% off</span>
+                        {% comment %} <span class="info-icon" title="Offer details available in the offers section">ⓘ</span> {% endcomment %}
+                    {% else %}
+                        {% with first_variant=laptop.variants.first %}
+                            Price: <span class="regular-price">₹{{ first_variant.price|default:'N/A' }}</span>
+                        {% endwith %}
+                    {% endif %}
                 </h2>
-
+            
                 <p class="stock-status" id="stock-status">
                     {% with first_variant=laptop.variants.first %}
                         {% if first_variant and first_variant.stock > 0 %}
@@ -127,9 +935,9 @@
                 {% else %}
                     <p>No variants available.</p>
                 {% endif %}
-
+            
                 <button class="buy-now" onclick="addToWishlist({{ laptop.id }})">Add to Wishlist</button>
-                <button class="add-to-cart" onclick="addToCartWithSelectedVariant()">
+                <button class="add-to-cart" onclick="addToCartWithSelectedVariant()" {% if not laptop.variants.exists %}disabled{% endif %}>
                     <i class="fas fa-shopping-cart"></i> Add to Cart
                 </button>
             </div>
@@ -157,27 +965,29 @@
             <div class="footer-section useful-links">
                 <h3>USEFUL LINKS</h3>
                 <ul>
-                    <li><a>About Us</a></li>
-                    <li><a>Help & Support</a></li>
-                    <li><a>FAQs</a></li>
-                    <li><a>Return Policy</a></li>
-                    <li><a>Privacy Policy</a></li>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Help & Support</a></li>
+                    <li><a href="#">FAQs</a></li>
+                    <li><a href="#">Return Policy</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
                 </ul>
             </div>
     
             <div class="footer-section products">
                 <h3>PRODUCTS</h3>
                 <ul>
-                    <li><a>Phones </a></li>
-                    <li><a>Laptops </a></li>
-                    <li><a>Top Brands</a></li>
+                    <li><a href="#">Phones</a></li>
+                    <li><a href="#">Laptops</a></li>
+                    <li><a href="#">Top Brands</a></li>
                 </ul>
             </div>
         </div>
     </footer>
 
     <script>
-        // Toast container creation
+        const isAuthenticated = {{ user.is_authenticated|lower }};
+        let selectedVariantId = {% with first_variant=laptop.variants.first %}{{ first_variant.id|default:'null' }}{% endwith %};
+
         function createToastContainer() {
             const toastContainer = document.createElement('div');
             toastContainer.id = 'toast-container';
@@ -188,38 +998,24 @@
             document.body.appendChild(toastContainer);
         }
 
-        function showToast(message, type = 'success') {
-            let toastContainer = document.getElementById('toast-container');
-            if (!toastContainer) {
-                createToastContainer();
-                toastContainer = document.getElementById('toast-container');
-            }
-
-            const toast = document.createElement('div');
-            toast.textContent = message;
-            toast.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
-            toast.style.color = 'white';
-            toast.style.padding = '15px';
-            toast.style.borderRadius = '5px';
-            toast.style.marginBottom = '10px';
-            toast.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.3s ease-in-out';
-
-            toastContainer.appendChild(toast);
-
-            setTimeout(() => { toast.style.opacity = '1'; }, 10);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => { 
-                    if (toastContainer.contains(toast)) {
-                        toastContainer.removeChild(toast); 
-                    }
-                }, 300);
-            }, 3000);
+        function showSweetAlert(message, type = 'success') {
+            const icon = type === 'success' ? 'success' : 'error';
+            
+            Swal.fire({
+                title: type === 'success' ? 'Success!' : 'Error!',
+                text: message,
+                icon: icon,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
         }
-
-        // Clear search functionality
         document.getElementById('clearSearch').addEventListener('click', function() {
             document.getElementById('searchInput').value = '';
             window.location.href = '{% url "shop_page" %}';
@@ -238,122 +1034,362 @@
         };
 
         function changeImage(src) {
-            document.getElementById("main-img").src = src;
-        }
+            const mainImg = document.getElementById("main-img");
+            mainImg.src = src;
+            reinitializeZoom();
+        } 
 
-        // Variant selection logic
-        let selectedVariantId = {% with first_variant=laptop.variants.first %}{{ first_variant.id|default:'null' }}{% endwith %};
-
-        document.addEventListener('DOMContentLoaded', function() {
+        function setupVariantSelection() {
+            console.log('Setting up variant selection...');
             const variantRows = document.querySelectorAll('.variant-row');
-            variantRows.forEach(row => {
+            console.log(`Found ${variantRows.length} variant rows`);
+            
+            variantRows.forEach((row, index) => {
+                console.log(`Setting up variant row ${index + 1}`, row);
                 row.addEventListener('click', function() {
+                    console.log('Variant clicked:', this);
                     const variantId = this.getAttribute('data-variant-id');
                     const price = this.getAttribute('data-price');
                     const stock = parseInt(this.getAttribute('data-stock'));
-                    const images = this.getAttribute('data-images').split(',').filter(Boolean); // Split and remove empty strings
+                    const imagesJsonElement = document.getElementById(`variant-images-${variantId}`);
 
-                    // Update selected variant
-                    selectedVariantId = variantId;
-
-                    // Update price
-                    document.getElementById('variant-price').textContent = `Price: ₹${price}`;
-
-                    // Update stock
-                    const stockStatus = document.getElementById('stock-status');
-                    if (stock > 0) {
-                        stockStatus.innerHTML = `<span class="in-stock">In Stock: <span id="stock-quantity">${stock}</span></span>`;
-                    } else {
-                        stockStatus.innerHTML = `<span class="out-of-stock">Out of Stock</span>`;
+                    if (!imagesJsonElement) {
+                        console.error(`Could not find images for variant ${variantId}`);
+                        return;
                     }
+                    
+                    try {
+                        const imagesJson = imagesJsonElement.textContent;
+                        const images = JSON.parse(imagesJson);
+                        
+                        selectedVariantId = variantId;
+                        console.log('Updated selectedVariantId:', selectedVariantId);
+                        
+                        updatePriceDisplay(price);
+                        updateStockDisplay(stock);
+                        updateProductImages(images);
+                        
+                        variantRows.forEach(r => r.classList.remove('selected'));
+                        this.classList.add('selected');
+                        console.log(`Variant ${variantId} selected successfully`);
 
-                    // Update images
-                    const mainImg = document.getElementById('main-img');
-                    const thumbnailContainer = document.querySelector('.thumbnail-images');
-                    if (images.length > 0) {
-                        mainImg.src = images[0];
-                        thumbnailContainer.innerHTML = '';
-                        images.forEach(src => {
-                            const img = document.createElement('img');
-                            img.src = src;
-                            img.alt = "{{ laptop.name }}";
-                            img.className = 'thumbnail';
-                            img.onclick = () => changeImage(src);
-                            thumbnailContainer.appendChild(img);
-                        });
-                    } else {
-                        mainImg.src = "{% static 'default-image.jpg' %}";
-                        thumbnailContainer.innerHTML = '';
+                    } catch (error) {
+                        console.error('Error processing variant selection:', error);
+                        showToast('Error loading variant details', 'error');
                     }
-
-                    // Highlight selected row
-                    variantRows.forEach(r => r.classList.remove('selected'));
-                    this.classList.add('selected');
-
-                    // Reinitialize zoom after updating images
-                    setupImageZoom();
                 });
             });
 
-            // Auto-select first variant
-            const firstRow = document.querySelector('.variant-row');
-            if (firstRow) {
+            if (variantRows.length > 0) {
+                const firstRow = variantRows[0];
+                selectedVariantId = firstRow.getAttribute('data-variant-id');
+                firstRow.classList.add('selected');
+                console.log('Auto-selected first variant:', selectedVariantId);
                 firstRow.click();
+            } else {
+                console.log('No variants available, setting selectedVariantId to null');
+                selectedVariantId = null;
             }
-        });
+        }
 
-        function addToCartWithSelectedVariant() {
+        async function addToCartWithSelectedVariant() {
+            console.log('Adding to cart...');
+            if (!isAuthenticated) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Please Login',
+                    text: 'Please login to add items to your cart or wishlist.',
+                    confirmButtonText: 'Login',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    }
+                });
+                return;
+            }
             if (!selectedVariantId) {
+                console.error('No variant selected');
                 showToast('Please select a variant first.', 'error');
                 return;
             }
-            
+
             const button = document.querySelector('.add-to-cart');
-            if (!button) return;
-            
+            if (!button) {
+                console.error('Add to cart button not found');
+                return;
+            }
+
             button.disabled = true;
-            
-            const url = `/add_to_cart_with_variant/${selectedVariantId}/`;
-            
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            console.log(`Adding variant ${selectedVariantId} to cart`);
+
+            try {
+                const csrftoken = getCookie('csrftoken');
+                if (!csrftoken) {
+                    console.error('CSRF token not found');
+                    throw new Error('CSRF token missing');
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Cart response:', data);
-                if (data.success) {
-                    showToast(data.message);
-                    fetchCartCount();
-                    if (data.stock !== undefined) {
-                        updateStockDisplay(data.stock);
-                        const selectedRow = document.querySelector(`.variant-row[data-variant-id="${selectedVariantId}"]`);
-                        if (selectedRow) {
-                            selectedRow.setAttribute('data-stock', data.stock);
-                        }
-                    }
+
+                const response = await fetch(`/add_to_cart_with_variant/${selectedVariantId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken
+                    },
+                    credentials: 'same-origin'
+                });
+
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Cart response data:', data);
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to add to cart');
+                }
+
+                const productName = document.querySelector('h2').textContent || "Product";
+
+                let message = '';
+                if (data.status === 'max_quantity') {
+                    message = `Cannot add more ${productName}. Stock limit reached.`;
+                } else if (data.is_new_item) {
+                    message = `${productName} added to cart successfully!`;
                 } else {
-                    showToast(data.message || 'Failed to add to cart', 'error');
+                    message = `${productName} quantity increased to ${data.current_quantity || data.quantity}`;
                 }
-            })
-            .catch(error => {
-                console.error('Cart Error:', error);
-                showToast('Failed to add to cart. Please try again.', 'error');
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    button.disabled = false;
-                }, 500);
+
+                showToast(message);
+
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+                
+                if (data.stock !== undefined) {
+                    updateStockDisplay(data.stock);
+                }
+            } catch (error) {
+                console.error("Cart Error:", error);
+                showToast(error.message || 'Failed to add to cart. Please try again.', 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+
+        function checkCartClick(event) {
+            event.preventDefault();
+        }
+        
+        function checkWishlistClick(event) {
+            event.preventDefault();
+        }
+
+        function updateProductImages(images) {
+            const mainImg = document.getElementById('main-img');
+            const thumbnailContainer = document.querySelector('.thumbnail-images');
+            
+            if (!mainImg || !thumbnailContainer) {
+                console.error('Main image or thumbnail container not found');
+                return;
+            }
+            
+            if (images && images.length > 0) {
+                mainImg.src = images[0];
+                thumbnailContainer.innerHTML = '';
+                
+                images.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.alt = "Product";
+                    img.className = 'thumbnail';
+                    img.addEventListener('click', function() {
+                        changeImage(this.src);
+                    });
+                    thumbnailContainer.appendChild(img);
+                });
+                
+                mainImg.onload = reinitializeZoom;
+            } else {
+                console.warn('No images provided for product');
+                mainImg.src = "/static/default-image.jpg";
+                thumbnailContainer.innerHTML = '';
+                mainImg.onload = reinitializeZoom;
+            }
+        }
+
+        function reinitializeZoom() {
+            try {
+                const mainImage = document.getElementById('main-img');
+                const imageContainer = document.querySelector('.main-image');
+                const zoomView = document.getElementById('zoomView');
+                
+                if (!mainImage || !imageContainer || !zoomView) {
+                    console.error('Zoom elements not found:', { mainImage, imageContainer, zoomView });
+                    return;
+                }
+
+                if (!mainImage.src || mainImage.src === window.location.href) {
+                    console.warn('Invalid or empty image source:', mainImage.src);
+                    zoomView.style.display = 'none';
+                    return;
+                }
+
+                console.log('Reinitializing zoom for:', mainImage.src);
+
+                // Remove existing event listeners to prevent duplicates
+                const newContainer = imageContainer.cloneNode(true);
+                imageContainer.parentNode.replaceChild(newContainer, imageContainer);
+                
+                const newMainImage = newContainer.querySelector('#main-img');
+                const newZoomView = newContainer.querySelector('#zoomView');
+
+                newContainer.addEventListener('mousemove', (e) => {
+                    const rect = newMainImage.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    // Only show zoom if cursor is within image bounds
+                    if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+                        newZoomView.style.display = 'none';
+                        return;
+                    }
+
+                    const xPercent = (x / rect.width) * 100;
+                    const yPercent = (y / rect.height) * 100;
+                    newZoomView.style.display = 'block';
+                    newZoomView.style.backgroundImage = `url(${newMainImage.src})`;
+                    newZoomView.style.backgroundSize = '200%';
+                    newZoomView.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
+                });
+
+                newContainer.addEventListener('mouseleave', () => {
+                    newZoomView.style.display = 'none';
+                });
+
+                newContainer.addEventListener('touchstart', (e) => {
+                    newZoomView.style.display = 'none';
+                }, { passive: true });
+
+            } catch (error) {
+                console.error('Error in reinitializeZoom:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document ready - initializing everything');
+
+            document.querySelector('nav a[href="/cart"]').addEventListener('click', function(event) {
+                event.preventDefault();
+                if (!isAuthenticated) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Please Login',
+                        text: 'Please login to view your cart.',
+                        confirmButtonText: 'Login',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/login';
+                        }
+                    });
+                } else {
+                    window.location.href = '/cart';
+                }
+            });
+
+            document.querySelector('nav a[href="/wishlist"]').addEventListener('click', function(event) {
+                event.preventDefault();
+                if (!isAuthenticated) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Please Login',
+                        text: 'Please login to view your wishlist.',
+                        confirmButtonText: 'Login',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/login';
+                        }
+                    });
+                } else {
+                    window.location.href = '/wishlist';
+                }
+            });
+            
+            createToastContainer();
+            loadInitialCounts();
+            
+            setupVariantSelection();
+            setupThumbnailListeners();
+            
+            const mainImage = document.getElementById('main-img');
+            if (mainImage) {
+                if (mainImage.complete) {
+                    setTimeout(reinitializeZoom, 100); // Slight delay to ensure DOM readiness
+                } else {
+                    mainImage.onload = () => setTimeout(reinitializeZoom, 100);
+                }
+            } else {
+                console.error('Main image not found on DOMContentLoaded');
+            }
+            
+            const addToCartBtn = document.querySelector('.add-to-cart');
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', addToCartWithSelectedVariant);
+            }
+            
+            const styleElement = document.createElement('style');
+            styleElement.textContent = `
+                .main-image {
+                    position: relative;
+                    overflow: hidden;
+                    touch-action: none;
+                }
+                #zoom-lens {
+                    border-radius: 50%;
+                    pointer-events: none;
+                }
+                #zoomed-image {
+                    border-radius: 8px;
+                }
+                @media (max-width: 768px) {
+                    #zoomed-image {
+                        width: 280px !important;
+                        height: 280px !important;
+                    }
+                    .thumbnail {
+                        cursor: pointer;
+                        border: 2px solid transparent;
+                        transition: border-color 0.2s ease;
+                    }
+                    .thumbnail:hover, .thumbnail:active {
+                        border-color: #007bff;
+                    }
+                }
+            `;
+            document.head.appendChild(styleElement);
+        });
+
+        function setupThumbnailListeners() {
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            console.log(`Setting up ${thumbnails.length} thumbnail listeners`);
+            
+            thumbnails.forEach((thumbnail, index) => {
+                thumbnail.removeEventListener('click', function() {
+                    changeImage(this.src);
+                });
+                
+                thumbnail.addEventListener('click', function() {
+                    console.log(`Thumbnail ${index + 1} clicked: ${this.src}`);
+                    changeImage(this.src);
+                });
             });
         }
 
@@ -374,6 +1410,21 @@
         const csrftoken = getCookie('csrftoken');
 
         function addToWishlist(productId) {
+            if (!isAuthenticated) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Please Login',
+                    text: 'Please login to add items to your cart or wishlist.',
+                    confirmButtonText: 'Login',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    }
+                });
+                return;
+            }
             fetch(`/add-to-wishlist/${productId}/`, {
                 method: 'POST',
                 headers: {
@@ -385,15 +1436,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast(data.message);
+                    showSweetAlert(data.message);
                     fetchWishlistCount();
                 } else {
-                    showToast('Error adding to wishlist', 'error');
+                    showSweetAlert('Error adding to wishlist', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showToast('Something went wrong', 'error');
+                showSweetAlert('Something went wrong', 'error');
             });
         }
 
@@ -420,15 +1471,16 @@
             })
             .then(data => {
                 if (data.success) {
-                    showToast(data.message || 'Product added to cart successfully');
+                    const productName = document.querySelector('h2').textContent || "Product";
+                    showSweetAlert(data.message || `${productName} added to cart successfully`);
                     fetchCartCount();
                 } else {
-                    showToast(data.message || 'Failed to add product to cart', 'error');
+                    showSweetAlert(data.message || 'Failed to add product to cart', 'error');
                 }
             })
             .catch(error => {
                 console.error('Cart Error:', error);
-                showToast('Failed to add to cart: ' + error.message, 'error');
+                showSweetAlert('Failed to add to cart: ' + error.message, 'error');
             })
             .finally(() => {
                 button.disabled = false;
@@ -502,105 +1554,29 @@
             console.log('Updated wishlist count to:', count || '0');
         }
 
-        // Image zoom functionality (moved outside to be reusable)
-        function setupImageZoom() {
-            const mainImage = document.getElementById('main-img');
-            const imageContainer = document.querySelector('.main-image');
+        function updatePriceDisplay(price) {
+            const priceElement = document.getElementById('variant-price');
+            const hasDiscount = priceElement.querySelector('.discounted-price') !== null;
 
-            // Remove existing zoom elements to avoid duplicates
-            const existingLens = imageContainer.querySelector('.zoom-lens');
-            if (existingLens) existingLens.remove();
-            const existingZoomed = document.querySelector('.zoomed-image');
-            if (existingZoomed) existingZoomed.remove();
-
-            imageContainer.style.position = 'relative';
-            imageContainer.style.overflow = 'hidden';
-
-            const lens = document.createElement('div');
-            lens.className = 'zoom-lens';
-            lens.style.position = 'absolute';
-            lens.style.display = 'none';
-            lens.style.border = '1px solid rgba(0,0,0,0.2)';
-            lens.style.backgroundColor = 'rgba(255,255,255,0.2)';
-            lens.style.pointerEvents = 'none';
-            lens.style.zIndex = '10';
-            imageContainer.appendChild(lens);
-
-            const zoomedImage = document.createElement('div');
-            zoomedImage.className = 'zoomed-image';
-            zoomedImage.style.position = 'fixed';
-            zoomedImage.style.display = 'none';
-            zoomedImage.style.top = '50%';
-            zoomedImage.style.left = '50%';
-            zoomedImage.style.transform = 'translate(-50%, -50%)';
-            zoomedImage.style.width = '400px';
-            zoomedImage.style.height = '400px';
-            zoomedImage.style.border = '1px solid #ddd';
-            zoomedImage.style.overflow = 'hidden';
-            zoomedImage.style.backgroundColor = '#fff';
-            zoomedImage.style.zIndex = '1000';
-            zoomedImage.style.boxShadow = '0 0 20px rgba(0,0,0,0.1)';
-            document.body.appendChild(zoomedImage);
-
-            const zoomImg = document.createElement('img');
-            zoomImg.src = mainImage.src;
-            zoomImg.style.position = 'absolute';
-            zoomImg.style.maxWidth = 'none';
-            zoomedImage.appendChild(zoomImg);
-
-            imageContainer.addEventListener('mouseenter', function(e) {
-                zoomImg.src = mainImage.src;
-                lens.style.display = 'block';
-                zoomedImage.style.display = 'block';
-            });
-
-            imageContainer.addEventListener('mouseleave', function(e) {
-                lens.style.display = 'none';
-                zoomedImage.style.display = 'none';
-            });
-
-            imageContainer.addEventListener('mousemove', function(e) {
-                const rect = imageContainer.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                lens.style.width = '100px';
-                lens.style.height = '100px';
-                lens.style.left = `${x - 50}px`;
-                lens.style.top = `${y - 50}px`;
-
-                const imgWidth = mainImage.offsetWidth;
-                const imgHeight = mainImage.offsetHeight;
-
-                const zoomRatioX = (zoomImg.naturalWidth / imgWidth);
-                const zoomRatioY = (zoomImg.naturalHeight / imgHeight);
-
-                zoomImg.style.width = `${imgWidth * zoomRatioX}px`;
-                zoomImg.style.height = `${imgHeight * zoomRatioY}px`;
-
-                zoomImg.style.left = `-${x * zoomRatioX - 50}px`;
-                zoomImg.style.top = `-${y * zoomRatioY - 50}px`;
-            });
-
-            const thumbnails = document.querySelectorAll('.thumbnail');
-            thumbnails.forEach(thumbnail => {
-                thumbnail.addEventListener('click', function() {
-                    mainImage.src = this.src;
-                    zoomImg.src = this.src;
-                });
-            });
+            if (hasDiscount) {
+                const discountPercentage = parseFloat(priceElement.querySelector('.discount-percentage').textContent.replace('% off', ''));
+                const newDiscountedPrice = parseFloat(price) * (1 - (discountPercentage / 100));
+                
+                priceElement.querySelector('.original-price').textContent = `₹${price}`;
+                priceElement.querySelector('.discounted-price').textContent = `₹${newDiscountedPrice.toFixed(2)}`;
+            } else {
+                priceElement.innerHTML = `Price: <span class="regular-price">₹${price}</span>`;
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const mainImage = document.getElementById('main-img');
-            if (mainImage.complete) {
-                setupImageZoom();
+        function updateStockDisplay(stock) {
+            const stockStatus = document.getElementById('stock-status');
+            if (stock > 0) {
+                stockStatus.innerHTML = `<span class="in-stock">In Stock: <span id="stock-quantity">${stock}</span></span>`;
             } else {
-                mainImage.addEventListener('load', setupImageZoom);
+                stockStatus.innerHTML = `<span class="out-of-stock">Out of Stock</span>`;
             }
-        });
-
-        document.addEventListener('DOMContentLoaded', createToastContainer);
+        }
 
         function placeOrderFromCheckout() {
             fetch('/place_order/', {
@@ -618,27 +1594,18 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('Order placed successfully!');
+                    showSweetAlert('Order placed successfully!');
                     if (data.stock_updates) {
                         updateStockDisplay(data.stock_updates[{{ laptop.id }}] || 0);
                     }
                 } else {
-                    showToast(data.message, 'error');
+                    showSweetAlert(data.message, 'error');
                 }
             })
-            .catch(error => showToast('Order placement failed', 'error'));
+            .catch(error => showSweetAlert('Order placement failed', 'error'));
         }
         
-        function updateStockDisplay(stock) {
-            const stockStatus = document.getElementById('stock-status');
-            if (stock > 0) {
-                stockStatus.innerHTML = `<span class="in-stock">In Stock: <span id="stock-quantity">${stock}</span></span>`;
-            } else {
-                stockStatus.innerHTML = `<span class="out-of-stock">Out of Stock</span>`;
-            }
-        }
-
-        function checkStockUpdates() {
+        {% comment %} function checkStockUpdates() {
             fetch(`/product-stock/${laptop.id}/`, {
                 method: 'GET',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -649,7 +1616,147 @@
                 updateStockDisplay(data.stock);
             });
         }
-        setInterval(checkStockUpdates, 10000);
+        setInterval(checkStockUpdates, 10000); {% endcomment %}
+
+        // Fix for the add to cart issue
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Document ready - initializing everything');
+            
+            // Clear any existing event listeners to prevent duplicates
+            const addToCartBtn = document.querySelector('.add-to-cart');
+            if (addToCartBtn) {
+                // Remove any existing event listeners by cloning and replacing the button
+                const newButton = addToCartBtn.cloneNode(true);
+                addToCartBtn.parentNode.replaceChild(newButton, addToCartBtn);
+                
+                // Add a single event listener
+                newButton.addEventListener('click', function(e) {
+                    e.preventDefault(); // Prevent any form submission
+                    e.stopPropagation(); // Stop event bubbling
+                    addToCartWithSelectedVariant();
+                });
+            }
+            
+            // Rest of the initialization code - removed createToastContainer
+            loadInitialCounts();
+            setupVariantSelection();
+            setupThumbnailListeners();
+            
+            // Set up image zoom
+            const mainImage = document.getElementById('main-img');
+            if (mainImage) {
+                if (mainImage.complete) {
+                    setupImageZoom();
+                } else {
+                    mainImage.onload = setupImageZoom;
+                }
+            }
+        });
+
+        // Remove duplicate DOMContentLoaded event - this is redundant with the one above
+        // document.addEventListener('DOMContentLoaded', function() { ... }); 
+
+        // Fix the addToCartWithSelectedVariant function
+        async function addToCartWithSelectedVariant() {
+            console.log('Adding to cart...');
+
+            if (!isAuthenticated) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Please Login',
+                    text: 'Please login to add items to your cart or wishlist.',
+                    confirmButtonText: 'Login',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    }
+                });
+                return;
+            }
+
+            if (!selectedVariantId) {
+                console.error('No variant selected');
+                showSweetAlert('Please select a variant first.', 'error');
+                return;
+            }
+
+            const button = document.querySelector('.add-to-cart');
+            if (!button) {
+                console.error('Add to cart button not found');
+                return;
+            }
+
+            // Prevent multiple simultaneous clicks
+            if (button.disabled) {
+                console.log('Button already disabled, ignoring click');
+                return;
+            }
+
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            console.log(`Adding variant ${selectedVariantId} to cart`);
+
+            try {
+                // Make sure CSRF token is properly obtained
+                const csrftoken = getCookie('csrftoken');
+                if (!csrftoken) {
+                    console.error('CSRF token not found');
+                    throw new Error('CSRF token missing');
+                }
+
+                const response = await fetch(`/add_to_cart_with_variant/${selectedVariantId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken
+                    },
+                    credentials: 'same-origin'
+                });
+
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Cart response data:', data);
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to add to cart');
+                }
+
+                // Get product info
+                const productName = document.querySelector('h2').textContent || "Product";
+
+                // Custom messages based on response
+                let message = '';
+                if (data.status === 'max_quantity') {
+                    message = `Cannot add more ${productName}. Stock limit reached.`;
+                } else if (data.is_new_item) {
+                    message = `${productName} added to cart successfully!`;
+                } else {
+                    message = `${productName} quantity increased to ${data.current_quantity || data.quantity}`;
+                }
+
+                showSweetAlert(message);
+
+                // Update UI
+                if (data.cart_count !== undefined) {
+                    updateCartCount(data.cart_count);
+                }
+                
+                if (data.stock !== undefined) {
+                    updateStockDisplay(data.stock);
+                }
+            } catch (error) {
+                console.error("Cart Error:", error);
+                showSweetAlert(error.message || 'Failed to add to cart. Please try again.', 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
     </script>
 
     <style>
@@ -696,6 +1803,48 @@
         }
         .variant-row.selected {
             background-color: #e0e0e0;
+        }
+
+        .product-gallery .main-image {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 456px;
+            cursor: crosshair;
+            display: flex;
+            justify-content: center;
+            overflow: visible;
+            z-index: 10;
+        }
+
+        .product-gallery .main-image img {
+            width: 75%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .product-gallery .zoom-view {
+            width: 600px;
+            height: 456px;
+            border: 1px solid #e5e7eb;
+            display: none;
+            overflow: hidden;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: absolute;
+            top: 0;
+            left: calc(100% + 20px);
+            z-index: 1000;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .product-gallery .zoom-view {
+                display: none !important;
+            }
         }
     </style>
 </body>

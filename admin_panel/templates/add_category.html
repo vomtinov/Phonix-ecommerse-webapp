@@ -12,6 +12,37 @@
             sidebar.classList.toggle("collapsed");
         }
     </script>
+    <style>
+        .error-message {
+            color: red;
+            font-size: 14px;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .alert-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+    </style>
 </head>
 <body>
 
@@ -33,7 +64,7 @@
             <li><a href="{% url 'order_list' %}">Order</a></li>
             <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="#">Return</a></li>
-            <li><a href="#">Sales Report</a></li>
+            <li><a href="{% url 'sales_report' %}">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>
         </ul>
     </div>
@@ -41,21 +72,112 @@
     <!-- Main Content -->
     <div class="content">
         <h2>Add New Category</h2>
-        <form action="{% url 'add_category' %}" method="POST">
+        
+        <!-- Display Django Messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form id="categoryForm" action="{% url 'add_category' %}" method="POST" onsubmit="return validateForm()">
             {% csrf_token %}
-            <label for="name">Category Name:</label>
-            <input type="text" id="name" name="name" required>
+            <div class="form-group">
+                <label for="name">Category Name:</label>
+                <input type="text" id="name" name="name" required>
+                <span id="nameError" class="error-message"></span>
+            </div>
 
-            <label for="description">Description:</label>
-            <textarea id="description" name="description" required></textarea>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required></textarea>
+                <span id="descriptionError" class="error-message"></span>
+            </div>
 
-            <label for="status">Status:</label>
-            <input type="checkbox" id="status" name="status" value="1" checked>
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <input type="checkbox" id="status" name="status" value="1" checked>
+            </div>
 
             <button type="submit">Add Category</button>
         </form>
     </div>
 
+
+    <script>
+        // Toggle sidebar function
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.content').classList.toggle('expanded');
+        }
+        
+        // Form validation function
+        function validateForm() {
+            let isValid = true;
+            const nameInput = document.getElementById('name');
+            const descriptionInput = document.getElementById('description');
+            const nameError = document.getElementById('nameError');
+            const descriptionError = document.getElementById('descriptionError');
+            
+            // Reset error messages
+            nameError.textContent = '';
+            descriptionError.textContent = '';
+            
+            // Validate name
+            if (nameInput.value.trim() === '') {
+                nameError.textContent = 'Category name is required';
+                isValid = false;
+            } else if (nameInput.value.trim().length > 255) {
+                nameError.textContent = 'Category name cannot exceed 255 characters';
+                isValid = false;
+            }
+            
+            // Check if name contains only numbers
+            if (/^\d+$/.test(nameInput.value.trim())) {
+                nameError.textContent = 'Category name cannot contain only numbers';
+                isValid = false;
+            }
+            
+            // Validate description
+            if (descriptionInput.value.trim() === '') {
+                descriptionError.textContent = 'Description is required';
+                isValid = false;
+            }
+            
+            // Check for special characters in name (optional)
+            const specialChars = /[!@#$%^&*()_+\=\[\]{};':"\\|,.<>\/?]+/;
+            if (specialChars.test(nameInput.value)) {
+                nameError.textContent = 'Category name should not contain special characters';
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        // Asynchronous name validation (check uniqueness)
+        document.getElementById('name').addEventListener('blur', async function() {
+            const nameInput = document.getElementById('name');
+            const nameError = document.getElementById('nameError');
+            
+            if (nameInput.value.trim() !== '') {
+                try {
+                    const response = await fetch(`/check-category-name/?name=${encodeURIComponent(nameInput.value)}`);
+                    const data = await response.json();
+                    
+                    if (data.exists) {
+                        nameError.textContent = 'This category name already exists';
+                    } else {
+                        nameError.textContent = '';
+                    }
+                } catch (error) {
+                    console.error('Error checking category name:', error);
+                }
+            }
+        });
     </script>
 
 </body>

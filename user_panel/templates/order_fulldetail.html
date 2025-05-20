@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details</title>
-    <link rel="stylesheet" href="{% static 'order_fulldetail.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'order_fulldetail.css' %}"> {% endcomment %}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -19,6 +19,452 @@
             font-size: 12px;
             margin-left: 5px;
             vertical-align: top;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        /* Body */
+        body {
+            background-color: #f0f2f5;
+            color: #111111;
+            line-height: 1.5;
+        }
+
+        /* Header */
+        header {
+            background-color: #131921;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        header h2 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 18px;
+            margin-left: 25px;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 25px;
+        }
+
+        .search-bar form {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #febd69;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 10px;
+            width: 100%;
+            font-size: 15px;
+        }
+
+        .search-bar button {
+            background-color: #febd69;
+            border: none;
+            color: #111111;
+            font-size: 16px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-bar button:hover {
+            background-color: #f3a847;
+        }
+
+        #clearSearch {
+            color: #555555;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        nav a {
+            color: #ffffff;
+            font-size: 20px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #febd69;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #ffffff;
+            min-width: 140px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: #111111;
+            padding: 12px 20px;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f5f5f5;
+            color: #e47911;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Modern Body Content Styles */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .container h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #131921;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #febd69;
+            padding-bottom: 10px;
+        }
+
+        .container p {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333333;
+        }
+
+        .container p strong {
+            color: #131921;
+            font-weight: 600;
+        }
+
+        .cancel-btn {
+            background-color: #ff4444;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 15px 0;
+            display: inline-block;
+        }
+
+        .cancel-btn:hover {
+            background-color: #cc3333;
+        }
+
+        .container h3 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #131921;
+            margin: 30px 0 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background-color: #fafafa;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        table thead {
+            background-color: #febd69;
+            color: #131921;
+        }
+
+        table th {
+            padding: 15px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        table tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s;
+        }
+
+        table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        table td {
+            padding: 15px;
+            font-size: 14px;
+            color: #333333;
+        }
+
+        table td img {
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .order-summary {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .order-summary p {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333333;
+        }
+
+        .order-summary p strong {
+            color: #131921;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background-color: #3085d6;
+            color: #ffffff;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #2567b1;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #172337;
+            color: #ffffff;
+            padding: 40px 20px;
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .newsletter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .newsletter input {
+            padding: 10px;
+            border: 1px solid #ffffff;
+            background-color: transparent;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+
+        .newsletter input::placeholder {
+            color: #cccccc;
+        }
+
+        .newsletter button {
+            background-color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .newsletter button:hover {
+            background-color: #e6e6e6;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .social-icons a {
+            display: inline-block;
+        }
+
+        .social-icons img {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) invert(1); /* Makes icons white */
+        }
+
+        .social-icons a:hover img {
+            filter: brightness(0) invert(0.8); /* Slightly dim on hover */
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-section ul li a:hover {
+            color: #00c4b4; /* Matches the teal color of "Privacy Policy" in the screenshot */
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .search-bar {
+                margin: 15px 0;
+                width: 100%;
+            }
+
+            nav {
+                gap: 20px;
+            }
+
+            .container {
+                margin: 20px;
+                padding: 15px;
+            }
+
+            .container h2 {
+                font-size: 24px;
+            }
+
+            .container h3 {
+                font-size: 20px;
+            }
+
+            table th, table td {
+                font-size: 13px;
+                padding: 10px;
+            }
+
+            table td img {
+                width: 40px;
+            }
+
+            .cancel-btn, .back-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .footer-section {
+                margin-bottom: 30px;
+            }
+
+            .newsletter {
+                justify-content: center;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -73,42 +519,37 @@
                 </tr>
             </thead>
             <tbody>
-                {% for order_item_data in order_items_with_images %}
-                <tr>
-                    <td>
-                        {{ order_item_data.product_name }}
-                        {% if order_item_data.variant_details %}
-                            <br>({{ order_item_data.variant_details }})
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if order_item_data.image %}
-                            <img src="{{ order_item_data.image.image.url }}" alt="{{ order_item_data.product_name }}" width="50">
-                        {% else %}
-                            <p>No Image</p>
-                        {% endif %}
-                    </td>
-                    <td>{{ order_item_data.item.quantity|default:"N/A" }}</td>
-                    <td>₹{{ order_item_data.item.price|floatformat:2|default:"0.00" }}</td>
-                </tr>
+                {% for item_data in order_items_with_images %}
+                    <tr>
+                        <td>
+                            {{ item_data.product_name }}
+                            {% if item_data.variant_details != "N/A" %}
+                                <br>({{ item_data.variant_details }})
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item_data.image %}
+                                <img src="{{ item_data.image.image.url }}" alt="{{ item_data.product_name }} image" width="50">
+                            {% else %}
+                                <p>No Image</p>
+                            {% endif %}
+                        </td>
+                        <td>{{ item_data.item.quantity }}</td>
+                        <td>₹{{ item_data.price|floatformat:2 }}</td>
+                    </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="4">
-                        {% if order.status == "Returned" %}
-                            Order items are no longer available as this order has been returned. Total amount refunded: ₹{{ order.total_price|floatformat:2 }}.
-                        {% else %}
-                            No items found for this order.
-                        {% endif %}
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="4">No items found for this order.</td>
+                    </tr>
                 {% endfor %}
             </tbody>
-        </table>        
+        </table>
+        
         <!-- Order Summary -->
         <div class="order-summary">
             <p><strong>Subtotal:</strong> ₹{{ subtotal|default:0|floatformat:2 }}</p>
             <p><strong>Shipping Fee:</strong> ₹{{ shipping_fee|default:0|floatformat:2 }}</p>
-            <p><strong>Grand Total:</strong> ₹{% if grand_total > 0 %}{{ grand_total|floatformat:2 }}{% else %}{{ order.total_price|floatformat:2 }}{% endif %}</p>
+            <p><strong>Grand Total:</strong> ₹{{ grand_total|floatformat:2 }}</p>
         </div>
         
         <a href="{% url 'order_details' %}" class="back-btn">Back to Orders</a>

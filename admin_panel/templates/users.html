@@ -28,7 +28,7 @@
             <li><a href="{% url 'order_list' %}">Order</a></li>
             <li><a href="{% url 'offer_management' %}">Offers</a></li>
             <li><a href="#">Return</a></li>
-            <li><a href="#">Sales Report</a></li>
+            <li><a href="{% url 'sales_report' %}">Sales Report</a></li>
             <li><a href="{% url 'admin_logout' %}">Logout</a></li>
         </ul>
     </div>
@@ -126,6 +126,30 @@
         window.onload = function() {
             clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
         };
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            {% if messages %}
+                const messages = [
+                    {% for message in messages %}
+                        {
+                            level: "{{ message.tags }}",
+                            text: "{{ message }}"
+                        },
+                    {% endfor %}
+                ];
+                messages.forEach(message => {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-right',
+                        icon: message.level === 'success' ? 'success' : 'error',
+                        title: message.text,
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                });
+            {% endif %}
+        });
     </script>
 </body>
 </html>

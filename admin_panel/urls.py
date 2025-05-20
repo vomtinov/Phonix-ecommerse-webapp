@@ -29,6 +29,7 @@ urlpatterns = [
     path('get-product-quantities/', views.get_product_quantities, name='get_product_quantities'),
     path('approve-return/<int:order_id>/', views.approve_return, name='approve_return'),
     path('offers/', views.offer_management, name='offer_management'),
+    #path('edit-offer/<int:offer_id>/', views.edit_offer, name='edit_offer'),
     path('offers/add/', views.add_offer, name='add_offer'),
     path('offers/edit/<int:offer_id>/', views.edit_offer, name='edit_offer'),
     path('offer/delete/<int:offer_id>/', views.delete_offer, name='delete_offer'),
@@ -37,6 +38,7 @@ urlpatterns = [
     path('coupons/edit/<int:coupon_id>/', views.edit_coupon, name='edit_coupon'),
     path('coupons/delete/<int:coupon_id>/', views.delete_coupon, name='delete_coupon'),
     #path('add_offer', views.add_offer, name='add_offer'),
+    path('sales_report/', views.sales_report, name='sales_report'),
     path("admin_logout/", views.admin_logout, name="admin_logout"),
 ]
 

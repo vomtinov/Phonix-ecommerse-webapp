@@ -5,9 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Address</title>
-    <link rel="stylesheet" href="{% static 'manage_addresss.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'manage_addresss.css' %}"> {% endcomment %}
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <!-- Toastify CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <!-- Toastify JS -->
@@ -22,11 +24,611 @@
             margin-left: 5px;
             vertical-align: top;
         }
+
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        /* Body */
+        body {
+            background-color: #f0f2f5;
+            color: #111111;
+            line-height: 1.5;
+        }
+
+        /* Header */
+        header {
+            background-color: #131921;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        header h2 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 18px;
+            margin-left: 25px;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 25px;
+        }
+
+        .search-bar form {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #febd69;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 10px;
+            width: 100%;
+            font-size: 15px;
+        }
+
+        .search-bar button {
+            background-color: #febd69;
+            border: none;
+            color: #111111;
+            font-size: 16px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-bar button:hover {
+            background-color: #f3a847;
+        }
+
+        #clearSearch {
+            color: #555555;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        nav a {
+            color: #ffffff;
+            font-size: 20px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #febd69;
+        }
+
+        .cart-count, .wishlist-count {
+            background-color: #ff4444; /* Red background */
+            color: white; /* White text */
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 6px; /* Padding for spacing */
+            font-size: 12px; /* Font size */
+            margin-left: 5px; /* Margin to separate from the icon */
+            vertical-align: top; /* Align with the icon */
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #ffffff;
+            min-width: 140px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: #111111;
+            padding: 12px 20px;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f5f5f5;
+            color: #e47911;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Container that holds sidebar and content */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+            flex-direction: row;
+        }
+
+        /* Sidebar Styles - Now with responsive considerations */
+        .sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            padding: 20px;
+            width: 250px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #1f2937;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #f3f4f6;
+            color: #2563eb;
+        }
+
+        .sidebar ul li a.active {
+            background-color: #e0f2fe;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .sidebar .logout-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar .logout-btn:hover {
+            background-color: #b91c1c;
+        }
+
+        /* Responsive Content Area */
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            margin: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .content h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .add-address-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            margin-bottom: 30px;
+            width: auto;
+        }
+
+        .add-address-btn:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .add-address-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Address Grid */
+        .address-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .address-card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .address-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .address-card p {
+            font-size: 14px;
+            color: #4b5563;
+            margin: 0;
+        }
+
+        .address-card p strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .address-card .edit-btn,
+        .address-card .delete-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .address-card .edit-btn {
+            background-color: #10b981;
+            color: white;
+            text-decoration: none;
+            border: none;
+        }
+
+        .address-card .edit-btn:hover {
+            background-color: #059669;
+        }
+
+        .address-card .delete-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+        }
+
+        .address-card .delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #172337;
+            color: #ffffff;
+            padding: 40px 20px;
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .newsletter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .newsletter input {
+            padding: 10px;
+            border: 1px solid #ffffff;
+            background-color: transparent;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+
+        .newsletter input::placeholder {
+            color: #cccccc;
+        }
+
+        .newsletter button {
+            background-color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .newsletter button:hover {
+            background-color: #e6e6e6;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .social-icons a {
+            display: inline-block;
+        }
+
+        .social-icons img {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) invert(1); /* Makes icons white */
+        }
+
+        .social-icons a:hover img {
+            filter: brightness(0) invert(0.8); /* Slightly dim on hover */
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-section ul li a:hover {
+            color: #00c4b4; /* Matches the teal color of "Privacy Policy" in the screenshot */
+        }
+
+        /* Mobile menu toggle button */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #1f2937;
+            font-size: 24px;
+            cursor: pointer;
+            position: fixed;
+            top: 80px;
+            left: 10px;
+            z-index: 1001;
+            background-color: #ffffff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Enhanced Responsive Design */
+        @media (max-width: 992px) {
+            .address-list {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            header h1 a {
+                font-size: 24px;
+            }
+
+            header h2 a {
+                font-size: 16px;
+                margin-left: 15px;
+            }
+
+            .search-bar {
+                margin: 15px 0;
+                width: 100%;
+            }
+
+            nav {
+                gap: 15px;
+                margin-top: 10px;
+            }
+
+            /* Sidebar behavior for mobile */
+            .container {
+                position: relative;
+                flex-direction: column;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -260px; /* Hide sidebar by default */
+                top: 0;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+                padding-top: 80px;
+                width: 250px;
+            }
+
+            .sidebar.active {
+                left: 0; /* Show sidebar when active */
+            }
+
+            /* Add overlay when sidebar is active */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .content {
+                margin: 10px;
+                padding: 15px;
+                width: calc(100% - 20px);
+            }
+
+            .content h2 {
+                font-size: 24px;
+                margin-bottom: 15px;
+            }
+
+            .add-address-btn {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .address-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .address-card {
+                padding: 15px;
+            }
+
+            .address-card .edit-btn,
+            .address-card .delete-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            nav a, .dropbtn {
+                font-size: 18px;
+            }
+
+            .search-bar input {
+                padding: 8px;
+                font-size: 14px;
+            }
+
+            .search-bar button {
+                padding: 8px 12px;
+            }
+        }
+
+        /* Footer responsive adjustments */
+        @media (max-width: 768px) {
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .footer-section {
+                margin-bottom: 30px;
+                width: 100%;
+            }
+
+            .newsletter {
+                justify-content: center;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1><a href="/">Phonix</a></h1>
+        <h2><a href="/">Phonix</a></h2>
         <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
 
         <div class="search-bar">
@@ -42,23 +644,31 @@
         <nav>
             <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
             <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
-
             <div class="dropdown">
                 <button class="dropbtn"><i class="fas fa-user"></i></button>
                 <div class="dropdown-content">
-                    <a href="{% url 'account_profile' %}">Profile</a>
-                    <a href="/logout">Logout</a>
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="{% url 'logout' %}">Logout</a>
                 </div>
             </div>
         </nav>
     </header>
 
+
+    <!-- Mobile menu toggle button -->
+    <button class="mobile-menu-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <div class="container">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <ul>
-                <li><a href="{% url 'account_profile' %}" >Account Overview</a></li>
+                <li><a href="{% url 'account_profile' %}">Account Overview</a></li>
                 <li><a href="{% url 'order_details' %}">Order Details</a></li>
-                <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
+                <li><a href="{% url 'manage_address' %}" class="active">Manage Address</a></li>
                 <li><a href="/wallet">Wallet</a></li>
                 <li><a href="/wishlist">Wishlist</a></li>
                 <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
@@ -136,9 +746,12 @@
         {% csrf_token %}
     </form>
 
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
     <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Keep all your existing search input and clear button logic
+        // Search input and clear button logic
         let searchInput = document.getElementById("searchInput");
         let clearSearch = document.getElementById("clearSearch");
 
@@ -151,7 +764,33 @@
             clearSearch.style.display = "none";
         });
 
-        // Modified Delete Address Function (Removed confirm dialog)
+        // Sidebar toggle functionality for mobile
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Media query listener to ensure sidebar is properly hidden when viewport changes
+        const mediaQuery = window.matchMedia('(min-width: 769px)');
+        function handleViewportChange(e) {
+            if (e.matches) {
+                // If viewport becomes larger than 768px, ensure sidebar is visible
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            }
+        }
+        mediaQuery.addEventListener('change', handleViewportChange);
+
+        // Delete Address Function
         function getCSRFToken() {
             const name = 'csrftoken';
             let cookieValue = null;
@@ -233,7 +872,7 @@
             window.location.href = '{% url "shop_page" %}';
         });
 
-        // Keep your existing cart and wishlist count logic
+        // Cart and wishlist count logic
         function loadInitialCounts() {
             fetch('/get_cart_count/', {
                 method: 'GET',
