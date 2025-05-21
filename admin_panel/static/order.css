@@ -1,0 +1,237 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  /* Body Styling */
+  body {
+    background-color: #f4f6f9;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  /* Sidebar Styling (Kept as per your original design) */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background-color: #2c3e50;
+    padding: 20px;
+    transition: width 0.3s ease;
+    overflow-y: auto;
+  }
+  
+  .sidebar.collapsed {
+    width: 60px;
+  }
+  
+  .sidebar h2 {
+    color: #ecf0f1;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  .sidebar ul {
+    list-style: none;
+  }
+  
+  .sidebar ul li {
+    margin: 15px 0;
+  }
+  
+  .sidebar ul li a {
+    color: #bdc3c7;
+    text-decoration: none;
+    font-size: 16px;
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background 0.3s, color 0.3s;
+  }
+  
+  .sidebar ul li a:hover {
+    background-color: #3498db;
+    color: #fff;
+  }
+  
+  .toggle-btn {
+    background: none;
+    border: none;
+    color: #ecf0f1;
+    font-size: 24px;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 20px;
+  }
+  
+  /* Container (Main Content) Styling */
+  .container {
+    margin-left: 250px; /* Matches sidebar width */
+    padding: 30px;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+  }
+  
+  .container h2 {
+    font-size: 28px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+  }
+  
+  /* Table Styling */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  table th,
+  table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  table th {
+    background-color: #3498db;
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  
+  table tr:hover {
+    background-color: #f9f9f9;
+  }
+  
+  /* Status Dropdown Styling */
+  .order-status {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+  
+  .order-status:disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+  }
+  
+  .order-status:focus {
+    border-color: #3498db;
+    outline: none;
+  }
+  
+  /* Confirm Return Button Styling */
+  .confirm-return {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #f39c12;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background 0.3s, transform 0.2s;
+  }
+  
+  .confirm-return:hover {
+    background-color: #e08e0b;
+    transform: translateY(-2px);
+  }
+  
+  /* Action Link Styling */
+  td a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  td a:hover {
+    text-decoration: underline;
+    color: #2980b9;
+  }
+  
+  /* Pagination Styling */
+  .pagination {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .step-links {
+    display: inline-block;
+    font-size: 14px;
+  }
+  
+  .step-links a {
+    color: #3498db;
+    text-decoration: none;
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: background 0.3s, color 0.3s;
+  }
+  
+  .step-links a:hover {
+    background-color: #3498db;
+    color: #fff;
+  }
+  
+  .current {
+    padding: 5px 10px;
+    color: #2c3e50;
+    font-weight: bold;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 60px;
+    }
+  
+    .sidebar h2,
+    .sidebar ul li a {
+      display: none;
+    }
+  
+    .sidebar.collapsed h2,
+    .sidebar.collapsed ul li a {
+      display: block;
+    }
+  
+    .container {
+      margin-left: 60px;
+      padding: 15px;
+    }
+  
+    table th,
+    table td {
+      font-size: 12px;
+      padding: 10px;
+    }
+  
+    .order-status,
+    .confirm-return {
+      font-size: 12px;
+      padding: 6px;
+    }
+  
+    .step-links a,
+    .current {
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+  }

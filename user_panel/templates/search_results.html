@@ -1,0 +1,936 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Keep original header and footer styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Header Styles (Unchanged) */
+        header {
+            background-color: #131921;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        header h2 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 18px;
+            margin-left: 25px;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 25px;
+        }
+
+        .search-bar form {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #febd69;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 10px;
+            width: 100%;
+            font-size: 15px;
+        }
+
+        .search-bar button {
+            background-color: #febd69;
+            border: none;
+            color: #111111;
+            font-size: 16px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-bar button:hover {
+            background-color: #f3a847;
+        }
+
+        #clearSearch {
+            color: #555555;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        nav a {
+            color: #ffffff;
+            font-size: 20px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #febd69;
+        }
+
+        .cart-count, .wishlist-count {
+            background-color: #ff4444; /* Red background */
+            color: white; /* White text */
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 6px; /* Padding for spacing */
+            font-size: 12px; /* Font size */
+            margin-left: 5px; /* Margin to separate from the icon */
+            vertical-align: top; /* Align with the icon */
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #ffffff;
+            min-width: 140px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: #111111;
+            padding: 12px 20px;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f5f5f5;
+            color: #e47911;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Modern Main Content Styles */
+        main {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* Sorting and Filtering Options */
+        .sort-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            align-items: center;
+            border: 1px solid #e9ecef;
+        }
+
+        .sort-options label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #343a40;
+            margin-right: 10px;
+        }
+
+        .sort-options select {
+            padding: 10px 15px;
+            font-size: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            background-color: #ffffff;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 180px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1em;
+        }
+
+        .sort-options select:hover,
+        .sort-options select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+            outline: none;
+        }
+
+        /* Products Section */
+        .products {
+            margin-bottom: 50px;
+        }
+
+        .products h2 {
+            font-size: 28px;
+            color: #212529;
+            font-weight: 700;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            position: relative;
+        }
+
+        .products h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 3px;
+            background-color: #007bff;
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .product {
+            background-color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .product img {
+            max-width: 100%;
+            height: 220px;
+            object-fit: contain;
+            margin-bottom: 20px;
+            transition: transform 0.4s ease;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .product:hover img {
+            transform: scale(1.08);
+        }
+
+        .product h3 {
+            font-size: 18px;
+            color: #007bff;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .product a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .price {
+            font-size: 20px;
+            color: #dc3545;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .product-details {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .brand {
+            font-weight: 600;
+            color: #343a40;
+            font-size: 15px;
+        }
+
+        .specs {
+            margin: 8px 0;
+            font-style: normal;
+            color: #868e96;
+        }
+
+        .product-actions {
+            display: flex;
+            justify-content: flex-start;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            color: #ff9500;
+            font-size: 20px;
+            text-decoration: none;
+            padding: 8px;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: #f1f3f5;
+        }
+
+        .action-btn:hover {
+            color: #ffffff;
+            background-color: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .no-products {
+            font-size: 18px;
+            color: #6c757d;
+            text-align: center;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin: 20px 0;
+        }
+
+        /* Footer Styles (Unchanged) */
+        footer {
+            background-color: #172337;
+            color: #ffffff;
+            padding: 40px 20px;
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .newsletter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .newsletter input {
+            padding: 10px;
+            border: 1px solid #ffffff;
+            background-color: transparent;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+
+        .newsletter input::placeholder {
+            color: #cccccc;
+        }
+
+        .newsletter button {
+            background-color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .newsletter button:hover {
+            background-color: #e6e6e6;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .social-icons a {
+            display: inline-block;
+        }
+
+        .social-icons img {
+            width: 24px;
+            height: 24px;
+            filter: brightness(0) invert(1);
+        }
+
+        .social-icons a:hover img {
+            filter: brightness(0) invert(0.8);
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-section ul li a:hover {
+            color: #00c4b4;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .product-list {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+
+            .product img {
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .search-bar {
+                margin: 15px 0;
+                width: 100%;
+            }
+
+            nav {
+                gap: 20px;
+            }
+
+            .product-list {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            }
+
+            .products h2 {
+                font-size: 24px;
+            }
+
+            .sort-options {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .sort-options select {
+                width: 100%;
+            }
+
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .footer-section {
+                margin-bottom: 30px;
+            }
+
+            .newsletter {
+                justify-content: center;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-list {
+                grid-template-columns: 1fr;
+            }
+
+            .product img {
+                height: 180px;
+            }
+
+            .products h2 {
+                font-size: 22px;
+            }
+
+            .sort-options select {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="{% url 'logout' %}">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Sorting and Filtering Options -->
+        <div class="sort-options">
+            <label for="sort">Sort by:</label>
+            <select name="sort" id="sort" onchange="window.location.href='?sort=' + this.value + '&category={{ category|default:'' }}&brand={{ brand|default:'' }}&query={{ query|default:'' }}'">
+                <option value="" {% if not sort %}selected{% endif %}>Default</option>
+                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                <option value="a_z" {% if sort == 'a_z' %}selected{% endif %}>A-Z</option>
+                <option value="z_a" {% if sort == 'z_a' %}selected{% endif %}>Z-A</option>
+            </select>
+
+            <label for="category">Category:</label>
+            <select name="category" id="category" onchange="window.location.href='?category=' + this.value + '&sort={{ sort|default:'' }}&brand={{ brand|default:'' }}&query={{ query|default:'' }}'">
+                <option value="" {% if not category %}selected{% endif %}>All</option>
+                <option value="Mobile" {% if category == 'Mobile' %}selected{% endif %}>Mobile</option>
+                <option value="Laptop" {% if category == 'Laptop' %}selected{% endif %}>Laptop</option>
+            </select>
+
+            <label for="brand">Brand:</label>
+            <select name="brand" id="brand" onchange="window.location.href='?brand=' + this.value + '&sort={{ sort|default:'' }}&category={{ category|default:'' }}&query={{ query|default:'' }}'">
+                <option value="" {% if not brand %}selected{% endif %}>All</option>
+                {% for brand_name in unique_brands %}
+                    <option value="{{ brand_name }}" {% if brand == brand_name %}selected{% endif %}>{{ brand_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if query %}
+            <h2>Search Results for "{{ query }}"</h2>
+
+            <!-- Mobiles Section -->
+            <section class="products">
+                <h2>Mobiles</h2>
+                <div class="product-list">
+                    {% if mobiles %}
+                        {% for mobile in mobiles %}
+                        <div class="product">
+                            <a href="{% url 'mobile_detail' mobile.id %}">
+                                {% with variant=mobile.variants.first %}
+                                    {% with first_image=variant.images.first %}
+                                        {% if first_image %}
+                                            <img src="{{ first_image.image.url }}" alt="{{ mobile.name }}">
+                                        {% else %}
+                                            <img src="{% static 'images/placeholder.png' %}" alt="No Image Available">
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endwith %}
+                                <h3>{{ mobile.name }}</h3>
+                            </a>
+                            <p class="price">₹{{ mobile.get_display_price }}</p>
+                            <div class="product-details">
+                                {% if mobile.brand %}
+                                    <p class="brand">{{ mobile.brand.name }}</p>
+                                {% endif %}
+                                {% with variant=mobile.variants.first %}
+                                    {% if variant.ram or variant.storage %}
+                                        <p class="specs">{{ variant.ram }}GB | {{ variant.storage }}GB</p>
+                                    {% endif %}
+                                {% endwith %}
+                                {% if mobile.description %}
+                                    <p>{{ mobile.description|truncatewords:20 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="product-actions">
+                                {% comment %} <a href="{% url 'add_to_cart' mobile.id %}" class="action-btn"><i class="fas fa-shopping-cart"></i></a> {% endcomment %}
+                                {% comment %} <a href="{% url 'add_to_wishlist' mobile.id %}" class="action-btn"><i class="fas fa-heart"></i></a> {% endcomment %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-products">No mobile products found.</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Laptops Section -->
+            <section class="products">
+                <h2>Laptops</h2>
+                <div class="product-list">
+                    {% if laptops %}
+                        {% for laptop in laptops %}
+                        <div class="product">
+                            <a href="{% url 'laptop_detail' laptop.id %}">
+                                {% with variant=laptop.variants.first %}
+                                    {% with first_image=variant.images.first %}
+                                        {% if first_image %}
+                                            <img src="{{ first_image.image.url }}" alt="{{ laptop.name }}">
+                                        {% else %}
+                                            <img src="{% static 'images/placeholder.png' %}" alt="No Image Available">
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endwith %}
+                                <h3>{{ laptop.name }}</h3>
+                            </a>
+                            <p class="price">₹{{ laptop.get_display_price }}</p>
+                            <div class="product-details">
+                                {% if laptop.brand %}
+                                    <p class="brand">{{ laptop.brand.name }}</p>
+                                {% endif %}
+                                {% with variant=laptop.variants.first %}
+                                    {% if variant.ram or variant.storage %}
+                                        <p class="specs">{{ variant.ram }}GB | {{ variant.storage }}GB</p>
+                                    {% endif %}
+                                {% endwith %}
+                                {% if laptop.description %}
+                                    <p>{{ laptop.description|truncatewords:20 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="product-actions">
+                                {% comment %} <a href="{% url 'add_to_cart' laptop.id %}" class="action-btn"><i class="fas fa-shopping-cart"></i></a> {% endcomment %}
+                                {% comment %} <a href="{% url 'add_to_wishlist' laptop.id %}" class="action-btn"><i class="fas fa-heart"></i></a> {% endcomment %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="no-products">No laptop products found.</p>
+                    {% endif %}
+                </div>
+            </section>
+        {% else %}
+            <p class="no-products">Enter a search term above to find products.</p>
+        {% endif %}
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section connect">
+                <h3>CONNECT WITH US</h3>
+                <div class="newsletter">
+                    <input type="email" placeholder="Enter Email ID">
+                    <button>→</button>
+                </div>
+                <div class="social-icons">
+                    <a><i class="fab fa-youtube"></i></a>
+                    <a><i class="fab fa-facebook-f"></i></a>
+                    <a><i class="fab fa-instagram"></i></a>
+                    <a><i class="fab fa-linkedin-in"></i></a>
+                    <a><i class="fab fa-twitter"></i></a>
+                </div>
+                <p>© Copyright 2025 Phonix. All rights reserved</p>
+            </div>
+    
+            <div class="footer-section useful-links">
+                <h3>USEFUL LINKS</h3>
+                <ul>
+                    <li><a>About Us</a></li>
+                    <li><a>Help & Support</a></li>
+                    <li><a>FAQs</a></li>
+                    <li><a>Return Policy</a></li>
+                    <li><a>Privacy Policy</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-section products">
+                <h3>PRODUCTS</h3>
+                <ul>
+                    <li><a>Phones </a></li>
+                    <li><a>Laptops </a></li>
+                    <li><a>Top Brands</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const isAuthenticated = {{ is_authenticated|lower }};
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchInput = document.getElementById('searchInput');
+            const clearButton = document.getElementById('clearSearch');
+        
+            // Show/hide the clear button based on input
+            searchInput.addEventListener('input', function () {
+                clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+            });
+        
+            // Clear search and redirect to shop page
+            clearButton.addEventListener('click', function () {
+                searchInput.value = '';
+                window.location.href = '{% url "shop_page" %}';
+            });
+        
+            // Initial check on page load
+            clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+        
+            // Load initial wishlist count
+            loadInitialCounts();
+        
+            // Handle "Add to Wishlist" clicks using event delegation on document
+            {% comment %} document.addEventListener('click', function(event) {
+                let link = event.target.closest('.product-actions a[href*="add_to_wishlist"]');
+                if (!link && event.target.tagName === 'I' && event.target.classList.contains('fa-heart')) {
+                    link = event.target.closest('.product-actions').querySelector('a[href*="add_to_wishlist"]');
+                }
+                if (!link) {
+                    return; // Exit if not a wishlist link
+                }
+        
+                event.preventDefault(); // Prevent default link navigation
+        
+                if (!isAuthenticated) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Please Login',
+                        text: 'Please login to add items to your wishlist.',
+                        confirmButtonText: 'Login',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/login';
+                        }
+                    });
+                    return;
+                }
+        
+                const url = link.getAttribute('href');
+                // Extract product ID from URL
+                const productId = url.split('/').filter(Boolean).pop();
+                
+                // Fix: Use add-to-wishlist URL path to match your URL patterns
+                // The URL in the href attribute doesn't match your actual endpoint
+                addToWishlist(productId, link);
+            }); {% endcomment %}
+        
+            // Handle Wishlist navigation click
+            const wishlistNav = document.querySelector('nav a[href="/wishlist"]');
+            if (wishlistNav) {
+                wishlistNav.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    if (!isAuthenticated) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Please Login',
+                            text: 'Please login to view your wishlist.',
+                            confirmButtonText: 'Login',
+                            showCancelButton: true,
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/login';
+                            }
+                        });
+                    } else {
+                        window.location.href = '/wishlist';
+                    }
+                });
+            }
+
+            // Handle cart navigation click
+            const cartNav = document.querySelector('nav a[href="/cart"]');
+            if (cartNav) {
+                cartNav.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    if (!isAuthenticated) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Please Login',
+                            text: 'Please login to view your cart.',
+                            confirmButtonText: 'Login',
+                            showCancelButton: true,
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '/login';
+                            }
+                        });
+                    } else {
+                        window.location.href = '/cart';
+                    }
+                });
+            }
+        });
+
+        function loadInitialCounts() {
+            fetch('/get_wishlist_count/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.wishlist_count !== undefined) {
+                    updateWishlistCount(data.wishlist_count);
+                }
+            })
+            .catch(error => console.error('Error loading wishlist count:', error));
+        }
+        
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            if (wishlistCountElement) {
+                wishlistCountElement.textContent = count || '0';
+            }
+        }
+        
+        function addToWishlist(productId, element) {
+            // CRITICAL FIX: The URL format needs to match your view function URL pattern
+            fetch(`/add-to-wishlist/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken') // Add CSRF token
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(`HTTP error! Status: ${response.status}, Message: ${err.message || 'Unknown error'}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: data.message.includes('Added') ? 'Added to Wishlist' : 'Removed from Wishlist',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    updateWishlistCount(data.wishlist_count);
+                    if (data.message.includes('Added')) {
+                        element.classList.add('added');
+                    } else {
+                        element.classList.remove('added');
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to update wishlist.'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error updating wishlist:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while updating the wishlist.'
+                });
+            });
+        }
+        
+        // Helper function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

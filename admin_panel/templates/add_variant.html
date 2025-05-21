@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Variant - {{ product.name }}</title>
+    <link rel="stylesheet" href="{% static 'add_variant.css' %}">
+</head>
+<body>
+
+    <div class="container">
+        <h2>Add Variant for {{ product.name }}</h2>
+        
+        <form id="variantForm" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label for="id_ram">RAM</label>
+            <input type="text" id="id_ram" name="ram" placeholder="Example: 8GB" required>
+
+            <label for="id_storage">Storage</label>
+            <input type="text" id="id_storage" name="storage" placeholder="Example: 128GB" required>
+
+            <label for="id_color">Color</label>
+            <input type="text" id="id_color" name="color" placeholder="Example: Black" required>
+
+            <label for="id_price">Price</label>
+            <input type="number" id="id_price" name="price" step="0.01" placeholder="Enter Price" required>
+
+            <label for="id_quantity">Quantity</label>
+            <input type="number" id="id_quantity" name="quantity" placeholder="Enter Stock Quantity" required>
+
+            <label for="id_image">Product Image</label>
+            <input type="file" id="id_image" name="image" accept="image/*">
+
+            <button type="button" id="addVariantBtn"><i class="fas fa-save"></i> Add Variant</button>
+        </form>
+
+        <a href="{% url 'product_list' %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Product List</a>
+    </div>
+
+    <script>
+        document.getElementById("addVariantBtn").addEventListener("click", function () {
+            let formData = new FormData();
+            formData.append("ram", document.getElementById("id_ram").value);
+            formData.append("storage", document.getElementById("id_storage").value);
+            formData.append("color", document.getElementById("id_color").value);
+            formData.append("price", document.getElementById("id_price").value);
+            formData.append("quantity", document.getElementById("id_quantity").value);
+
+            let imageInput = document.getElementById("id_image");  // Ensure image field exists
+            if (imageInput.files.length > 0) {
+                formData.append("image", imageInput.files[0]);  // Append image if selected
+            }
+
+            formData.append("csrfmiddlewaretoken", document.querySelector("[name=csrfmiddlewaretoken]").value);
+
+            fetch("/add_variant/{{ product.id }}/", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Variant added successfully!");
+                    window.location.reload();
+                } else {
+                    alert("Error: " + JSON.stringify(data.error));
+                }
+            })
+            .catch(error => console.log("Error:", error));
+        });
+    </script>
+
+</body>
+</html>

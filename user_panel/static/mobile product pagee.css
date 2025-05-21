@@ -1,0 +1,608 @@
+/* Reset default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Body */
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Header */
+header {
+    background-color: #131921;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+header h1 a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+header h2 a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 18px;
+    margin-left: 25px;
+    font-weight: 500;
+}
+
+.search-bar {
+    flex-grow: 1;
+    margin: 0 25px;
+}
+
+.search-bar form {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #febd69;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    padding: 10px;
+    width: 100%;
+    font-size: 15px;
+}
+
+.search-bar button {
+    background-color: #febd69;
+    border: none;
+    color: #111111;
+    font-size: 16px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-bar button:hover {
+    background-color: #f3a847;
+}
+
+#clearSearch {
+    color: #555555;
+    padding: 10px;
+    font-size: 14px;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+nav a {
+    color: #ffffff;
+    font-size: 20px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+nav a:hover {
+    color: #febd69;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropbtn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #ffffff;
+    min-width: 140px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.dropdown-content a {
+    color: #111111;
+    padding: 12px 20px;
+    display: block;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dropdown-content a:hover {
+    background-color: #f5f5f5;
+    color: #e47911;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Main Product Details Section */
+main {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.product-container {
+    display: flex;
+    gap: 30px;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Product Gallery */
+.product-gallery {
+    flex: 1;
+    max-width: 500px;
+}
+
+.main-image {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.main-image img {
+    max-width: 100%;
+    height: 400px;
+    object-fit: contain;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.thumbnail-images {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.thumbnail {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.thumbnail:hover {
+    border-color: #2874f0;
+    transform: scale(1.05);
+}
+
+/* Product Info */
+.product-info {
+    flex: 1;
+    padding: 10px 0;
+    min-height: 0;
+    overflow: visible;
+}
+
+.product-info h2 {
+    font-size: 24px;
+    color: #212121;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.brand, .category {
+    font-size: 16px;
+    color: #878787;
+    margin-bottom: 8px;
+}
+
+.brand strong, .category strong {
+    color: #212121;
+}
+
+.description {
+    font-size: 14px;
+    color: #555;
+    margin: 15px 0;
+    line-height: 1.6;
+}
+
+.product-info h2:nth-of-type(2) {
+    font-size: 28px;
+    color: #388e3c;
+    font-weight: 600;
+    margin: 15px 0;
+}
+
+.product-info > * {
+    width: 100%; /* Ensure each child takes full width */
+}
+
+.stock-status {
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.in-stock {
+    color: #388e3c;
+    font-weight: 500;
+}
+
+.out-of-stock {
+    color: #ff6161;
+    font-weight: 500;
+}
+
+/* Variants Table */
+.product-info h3 {
+    font-size: 18px;
+    color: #212121;
+    margin: 20px 0 10px;
+    font-weight: 500;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 14px;
+}
+
+th {
+    background-color: #f5f5f5;
+    color: #212121;
+    font-weight: 500;
+}
+
+td {
+    color: #555;
+}
+
+#variant-price .original-price {
+    text-decoration: line-through;
+    color: #888;
+    margin-right: 10px;
+}
+
+#variant-price .discounted-price {
+    color: #28a745;
+    margin-right: 10px;
+}
+
+#variant-price .discount-percentage {
+    color: #28a745;
+    font-size: 14px;
+}
+
+#variant-price .regular-price {
+    color: #212121;
+}
+
+/* Buttons */
+.buy-now, .add-to-cart {
+    display: inline-block;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.buy-now {
+    background-color: #ff9f00;
+    color: white;
+}
+
+.buy-now:hover {
+    background-color: #fb641b;
+    transform: scale(1.02);
+}
+
+.add-to-cart {
+    background-color: #fb641b;
+    color: white;
+}
+
+.add-to-cart:hover {
+    background-color: #ff9f00;
+    transform: scale(1.02);
+}
+
+.add-to-cart i {
+    margin-right: 8px;
+}
+
+/* Add this to your existing style section */
+.offers-container {
+    margin: 20px 0;
+    clear: both;
+    width: 100%;
+    display: block;
+    overflow: hidden;
+}
+
+.offers-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.offer-item {
+    margin-bottom: 10px;
+    clear: both;
+}
+
+
+.offer-item:last-child {
+    border-bottom: none;
+}
+
+.offer-badge {
+    display: inline-block;
+    background-color: #ff5722;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.offer-title {
+    font-weight: bold;
+    color: #333;
+}
+
+.offer-description {
+    margin: 5px 0;
+    color: #555;
+}
+
+.offer-discount {
+    color: #e53935;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.offer-expiry {
+    font-size: 0.8em;
+    color: #757575;
+    margin-top: 5px;
+}
+
+#variant-price {
+    display: block;
+    width: 100%;
+    margin: 20px 0;
+    line-height: 1.5;
+    clear: both;
+    overflow: hidden;
+} 
+
+#variant-price span {
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 5px;
+}
+
+.info-icon {
+    font-size: 12px;
+    color: #888;
+    cursor: help;
+}
+
+.offers-container {
+    margin-bottom: 15px;
+}
+
+.offers-list .offer-item {
+    list-style: none;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.offer-badge {
+    color: #ff4444;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Footer */
+/* footer {
+    background-color: #172337;
+    color: #ffffff;
+    padding: 40px 20px;
+    margin-top: 40px;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    text-align: center; /* Center-align the heading */
+}
+
+.newsletter {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    justify-content: center; /* Center the input and button */
+}
+
+.newsletter input {
+    padding: 10px;
+    border: 1px solid #ffffff;
+    background-color: transparent;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100%;
+    max-width: 200px;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.newsletter input::placeholder {
+    color: #cccccc;
+}
+
+.newsletter button {
+    background-color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.newsletter button:hover {
+    background-color: #e6e6e6;
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    justify-content: center; /* Center the social icons */
+}
+
+.social-icons a {
+    display: inline-block;
+}
+
+.social-icons img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1); /* Makes icons white */
+}
+
+.social-icons a:hover img {
+    filter: brightness(0) invert(0.8); /* Slightly dim on hover */
+}
+
+.footer-section p {
+    font-size: 12px;
+    color: #cccccc;
+    text-align: center; /* Center-align the copyright notice */
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li {
+    margin-bottom: 10px;
+}
+
+.footer-section ul li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.footer-section ul li a:hover {
+    color: #00c4b4; /* Matches the teal color of "Privacy Policy" in the screenshot */
+} */
+
+/* Responsive Design for Footer */
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-section {
+        margin-bottom: 30px;
+    }
+
+    .newsletter {
+        justify-content: center;
+    }
+
+    .social-icons {
+        justify-content: center;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .product-container {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .main-image img {
+        height: 300px;
+    }
+
+    .thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+
+    .product-info h2 {
+        font-size: 20px;
+    }
+
+    .product-info h2:nth-of-type(2) {
+        font-size: 24px;
+    }
+
+    .buy-now, .add-to-cart {
+        width: 100%;
+        margin: 5px 0;
+    }
+}

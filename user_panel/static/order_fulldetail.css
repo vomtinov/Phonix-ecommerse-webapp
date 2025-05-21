@@ -1,0 +1,480 @@
+/* Reset default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Body */
+body {
+    background-color: #f1f3f6;
+    color: #212121;
+    line-height: 1.6;
+}
+
+/* Header */
+header {
+    background-color: #131921;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+header h1 a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+header h2 a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 18px;
+    margin-left: 25px;
+    font-weight: 500;
+}
+
+.search-bar {
+    flex-grow: 1;
+    margin: 0 25px;
+}
+
+.search-bar form {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #febd69;
+}
+
+.search-bar input {
+    border: none;
+    outline: none;
+    padding: 10px;
+    width: 100%;
+    font-size: 15px;
+}
+
+.search-bar button {
+    background-color: #febd69;
+    border: none;
+    color: #111111;
+    font-size: 16px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-bar button:hover {
+    background-color: #f3a847;
+}
+
+#clearSearch {
+    color: #555555;
+    padding: 10px;
+    font-size: 14px;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+nav a {
+    color: #ffffff;
+    font-size: 20px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+nav a:hover {
+    color: #febd69;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropbtn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #ffffff;
+    min-width: 140px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.dropdown-content a {
+    color: #111111;
+    padding: 12px 20px;
+    display: block;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dropdown-content a:hover {
+    background-color: #f5f5f5;
+    color: #e47911;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+
+/* Main Container */
+.container {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.container h2 {
+    font-size: 28px;
+    color: #212121;
+    font-weight: 600;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #2874f0;
+    padding-bottom: 10px;
+}
+
+.container p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.container p strong {
+    color: #212121;
+    font-weight: 600;
+}
+
+/* Cancel Button */
+.cancel-btn {
+    background-color: #ff6161;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    margin: 10px 0;
+}
+
+.cancel-btn:hover {
+    background-color: #d32f2f;
+    transform: scale(1.02);
+}
+
+/* Order Items */
+.container h3 {
+    font-size: 20px;
+    color: #212121;
+    font-weight: 600;
+    margin: 20px 0 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+    background-color: #f5f5f5;
+    color: #212121;
+    font-weight: 600;
+}
+
+td {
+    color: #555;
+}
+
+td img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+/* Order Summary */
+.order-summary {
+    background-color: #fafafa;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.order-summary p {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.order-summary p strong {
+    color: #212121;
+}
+
+.order-summary p:last-child {
+    font-size: 18px;
+    font-weight: 600;
+    color: #b12704;
+}
+
+/* Back Button */
+.back-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #2874f0;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-top: 20px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.back-btn:hover {
+    background-color: #1a5dc7;
+    transform: scale(1.02);
+}
+
+/* Footer */
+footer {
+    background-color: #172337;
+    color: #ffffff;
+    padding: 40px 20px;
+    margin-top: 40px;
+}
+
+.footer-container {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 200px;
+}
+
+.footer-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    text-align: center; /* Center-align the heading */
+}
+
+.newsletter {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    justify-content: center; /* Center the input and button */
+}
+
+.newsletter input {
+    padding: 10px;
+    border: 1px solid #ffffff;
+    background-color: transparent;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100%;
+    max-width: 200px;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.newsletter input::placeholder {
+    color: #cccccc;
+}
+
+.newsletter button {
+    background-color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.newsletter button:hover {
+    background-color: #e6e6e6;
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    justify-content: center; /* Center the social icons */
+}
+
+.social-icons a {
+    display: inline-block;
+}
+
+.social-icons img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1); /* Makes icons white */
+}
+
+.social-icons a:hover img {
+    filter: brightness(0) invert(0.8); /* Slightly dim on hover */
+}
+
+.footer-section p {
+    font-size: 12px;
+    color: #cccccc;
+    text-align: center; /* Center-align the copyright notice */
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li {
+    margin-bottom: 10px;
+}
+
+.footer-section ul li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.footer-section ul li a:hover {
+    color: #00c4b4; /* Matches the teal color of "Privacy Policy" in the screenshot */
+}
+
+/* Responsive Design for Footer */
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-section {
+        margin-bottom: 30px;
+    }
+
+    .newsletter {
+        justify-content: center;
+    }
+
+    .social-icons {
+        justify-content: center;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    header {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .search-bar {
+        margin: 15px 0;
+        width: 100%;
+    }
+
+    nav {
+        gap: 15px;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    th, td {
+        min-width: 100px;
+    }
+
+    .container h2 {
+        font-size: 24px;
+    }
+
+    .order-summary p {
+        font-size: 14px;
+    }
+
+    .back-btn, .cancel-btn {
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .container h2 {
+        font-size: 20px;
+    }
+
+    th, td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    td img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .order-summary p {
+        font-size: 13px;
+    }
+
+    .order-summary p:last-child {
+        font-size: 16px;
+    }
+}

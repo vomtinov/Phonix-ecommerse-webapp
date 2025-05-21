@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Brand</title>
+    <link rel="stylesheet" href="{% static 'add_brandd.css' %}">
+</head>
+<body>
+
+     <!-- Sidebar -->
+     <div class="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <h2>Add Brand</h2>
+        <ul>
+            <li><a href="{% url 'admin_panel' %}">Admin Panel</a></li>
+            <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'users' %}">Users</a></li>
+            <li><a href="{% url 'category_list' %}">Category</a></li>
+            <li><a href="{% url 'add_category' %}">Add Category</a></li>
+            <li><a href="{% url 'brand_list' %}">Brand</a></li>
+            <li><a href="{% url 'add_brand' %}">Add Brand</a></li>
+            <li><a href="{% url 'product_list' %}">Product</a></li>
+            <li><a href="{% url 'add_product' %}">Add Product</a></li>
+            <li><a href="{% url 'coupon_list' %}">Coupon</a></li>
+            <li><a href="{% url 'order_list' %}">Order</a></li>
+            <li><a href="{% url 'offer_management' %}">Offers</a></li>
+            <li><a href="#">Return</a></li>
+            <li><a href="{% url 'sales_report' %}">Sales Report</a></li>
+            <li><a href="{% url 'admin_logout' %}">Logout</a></li>
+        </ul>
+    </div>
+
+
+    <div class="form-container">
+        <h2>Add New Brand</h2>
+        <form method="POST">
+            {% csrf_token %}
+            <label>Brand Name:</label>
+            <input type="text" name="name" required>
+
+            <label>Description:</label>
+            <textarea name="description" required></textarea>
+
+            <label>Status:</label>
+            <select name="status">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+            </select>
+
+            <button type="submit">Add Brand</button>
+        </form>
+    </div>
+    <script>
+        function toggleSidebar() {
+            let sidebar = document.querySelector(".sidebar");
+            let formContainer = document.querySelector(".form-container");
+        
+            sidebar.classList.toggle("collapsed");
+            formContainer.classList.toggle("collapsed");
+        }
+        </script>        
+</body>
+</html>

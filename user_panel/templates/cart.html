@@ -1,0 +1,1403 @@
+    {% load static %}
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cart</title>
+        {% comment %} <link rel="stylesheet" href="{% static 'cartt.css' %}"> {% endcomment %}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <style>
+            /* Existing Toast Notification Styles */
+            .toast-container {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+            }
+            .toast {
+                background-color: #333;
+                color: white;
+                padding: 10px 20px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                opacity: 0;
+                transition: opacity 0.3s ease-in-out;
+            }
+            .toast.show {
+                opacity: 1;
+            }
+    
+            /* Existing Header Styles (Unchanged) */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Roboto', Arial, sans-serif;
+            }
+    
+            body {
+                background-color: #f5f7fa;
+                color: #111111;
+                line-height: 1.5;
+            }
+    
+            header {
+                background-color: #131921;
+                color: white;
+                padding: 15px 25px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
+    
+            header h1 a {
+                color: #ffffff;
+                text-decoration: none;
+                font-size: 28px;
+                font-weight: 700;
+            }
+    
+            header h2 a {
+                color: #ffffff;
+                text-decoration: none;
+                font-size: 18px;
+                margin-left: 25px;
+                font-weight: 500;
+            }
+    
+            .search-bar {
+                flex-grow: 1;
+                margin: 0 25px;
+            }
+    
+            .search-bar form {
+                display: flex;
+                align-items: center;
+                background-color: #ffffff;
+                border-radius: 4px;
+                overflow: hidden;
+                border: 1px solid #febd69;
+            }
+    
+            .search-bar input {
+                border: none;
+                outline: none;
+                padding: 10px;
+                width: 100%;
+                font-size: 15px;
+            }
+    
+            .search-bar button {
+                background-color: #febd69;
+                border: none;
+                color: #111111;
+                font-size: 16px;
+                padding: 10px 15px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+    
+            .search-bar button:hover {
+                background-color: #f3a847;
+            }
+    
+            #clearSearch {
+                color: #555555;
+                padding: 10px;
+                font-size: 14px;
+            }
+    
+            nav {
+                display: flex;
+                align-items: center;
+                gap: 25px;
+            }
+    
+            nav a {
+                color: #ffffff;
+                font-size: 20px;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+    
+            nav a:hover {
+                color: #febd69;
+            }
+    
+            .cart-count, .wishlist-count {
+                background-color: #ff4444;
+                color: white;
+                border-radius: 50%;
+                padding: 2px 6px;
+                font-size: 12px;
+                margin-left: 5px;
+                vertical-align: top;
+            }
+    
+            .dropdown {
+                position: relative;
+            }
+    
+            .dropbtn {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+            }
+    
+            .dropdown-content {
+                display: none;
+                position: absolute;
+                right: 0;
+                background-color: #ffffff;
+                min-width: 140px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+                border-radius: 4px;
+            }
+    
+            .dropdown-content a {
+                color: #111111;
+                padding: 12px 20px;
+                display: block;
+                text-decoration: none;
+                font-size: 14px;
+            }
+    
+            .dropdown-content a:hover {
+                background-color: #f5f5f5;
+                color: #e47911;
+            }
+    
+            .dropdown:hover .dropdown-content {
+                display: block;
+            }
+    
+            /* Modernized Body Content Styles */
+            .cart-container {
+                max-width: 1200px;
+                margin: 40px auto;
+                padding: 0 20px;
+            }
+    
+            .cart-container h2 {
+                font-size: 32px;
+                color: #1a1a1a;
+                font-weight: 600;
+                margin-bottom: 30px;
+                text-align: left;
+                position: relative;
+                padding-bottom: 10px;
+            }
+    
+            .cart-container h2::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 80px;
+                height: 3px;
+                background-color: #007bff;
+                border-radius: 2px;
+            }
+    
+            .cart-content {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 30px;
+                align-items: start;
+            }
+    
+            /* Cart Items */
+            .cart-items {
+                min-width: 0;
+            }
+    
+            .cart-item {
+                display: flex;
+                background-color: #ffffff;
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 20px;
+                align-items: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+    
+            .cart-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            }
+    
+            .product-image {
+                width: 120px;
+                height: 120px;
+                object-fit: contain;
+                margin-right: 20px;
+                border-radius: 8px;
+                border: 1px solid #e8ecef;
+                background-color: #f8f9fa;
+            }
+    
+            .product-details {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+    
+            .product-details h3 {
+                font-size: 20px;
+                color: #007bff;
+                font-weight: 500;
+                margin-bottom: 10px;
+                line-height: 1.4;
+            }
+    
+            .product-details .price {
+                font-size: 18px;
+                color: #e63946;
+                font-weight: 600;
+                margin-bottom: 12px;
+            }
+    
+            .product-details .price .original-price {
+                color: #6c757d;
+                font-size: 14px;
+                margin-right: 8px;
+            }
+    
+            .product-details .price .discounted-price {
+                color: #e63946;
+            }
+    
+            .product-details .price .discount-badge {
+                color: #28a745;
+                font-size: 12px;
+                font-weight: 500;
+                margin-left: 8px;
+            }
+    
+            .quantity-controls {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+                background-color: #f1f3f5;
+                border-radius: 20px;
+                padding: 5px 10px;
+                width: fit-content;
+            }
+    
+            .quantity-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                background-color: #ffffff;
+                color: #007bff;
+                text-decoration: none;
+                border-radius: 50%;
+                font-size: 20px;
+                transition: background-color 0.3s, color 0.3s;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+    
+            .quantity-btn:hover {
+                background-color: #007bff;
+                color: #ffffff;
+            }
+    
+            .quantity-btn.disabled {
+                background-color: #e9ecef;
+                color: #adb5bd;
+                cursor: not-allowed;
+                box-shadow: none;
+            }
+    
+            .quantity {
+                font-size: 18px;
+                font-weight: 500;
+                min-width: 30px;
+                text-align: center;
+                color: #1a1a1a;
+            }
+    
+            .remove-btn {
+                color: #dc3545;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: color 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+    
+            .remove-btn:hover {
+                color: #a71d2a;
+            }
+    
+            .remove-btn::before {
+                content: '\f2ed';
+                font-family: 'Font Awesome 6 Free';
+                font-weight: 900;
+            }
+    
+            /* Order Summary */
+            .order-summary {
+                background-color: #ffffff;
+                border-radius: 12px;
+                padding: 25px;
+                min-width: 300px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                position: sticky;
+                top: 80px;
+            }
+    
+            .order-summary h3 {
+                font-size: 24px;
+                color: #1a1a1a;
+                font-weight: 600;
+                margin-bottom: 20px;
+            }
+    
+            .order-summary p {
+                font-size: 16px;
+                color: #495057;
+                margin-bottom: 12px;
+                display: flex;
+                justify-content: space-between;
+            }
+    
+            .order-summary hr {
+                border: none;
+                border-top: 1px solid #e9ecef;
+                margin: 15px 0;
+            }
+    
+            .order-summary p strong {
+                color: #e63946;
+                font-size: 18px;
+            }
+    
+            .error-text {
+                color: #dc3545;
+                font-size: 14px;
+                margin: 12px 0;
+                text-align: center;
+            }
+    
+            .checkout-btn {
+                display: block;
+                width: 100%;
+                padding: 14px;
+                background-color: #007bff;
+                color: white;
+                font-size: 16px;
+                font-weight: 500;
+                text-align: center;
+                text-decoration: none;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+                box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+            }
+    
+            .checkout-btn:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+            }
+    
+            .checkout-btn:disabled {
+                background-color: #adb5bd;
+                cursor: not-allowed;
+                transform: none;
+                box-shadow: none;
+            }
+    
+            /* Empty Cart Styles */
+            .empty-cart {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                padding: 40px;
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                margin: 20px 0;
+            }
+
+            .empty-icon {
+                font-size: 60px;
+                color: #007bff;
+                margin-bottom: 20px;
+            }
+
+            .empty-cart h3 {
+                font-size: 24px;
+                color: #1a1a1a;
+                margin-bottom: 10px;
+                font-weight: 600;
+            }
+
+            .empty-cart p {
+                font-size: 16px;
+                color: #6c757d;
+                margin-bottom: 25px;
+            }
+
+            .shop-now-btn {
+                background-color: #007bff;
+                color: white;
+                padding: 12px 30px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+            }
+
+            .shop-now-btn:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+            }
+
+            /* Responsive adjustments */
+            @media (max-width: 480px) {
+                .empty-cart {
+                    padding: 30px 20px;
+                }
+                
+                .empty-icon {
+                    font-size: 50px;
+                }
+                
+                .empty-cart h3 {
+                    font-size: 20px;
+                }
+                
+                .empty-cart p {
+                    font-size: 14px;
+                }
+                
+                .shop-now-btn {
+                    padding: 10px 25px;
+                }
+            }
+    
+            /* Responsive Design for Body Content */
+            @media (max-width: 768px) {
+                .cart-content {
+                    grid-template-columns: 1fr;
+                }
+    
+                .cart-item {
+                    flex-direction: column;
+                    text-align: center;
+                    padding: 15px;
+                }
+    
+                .product-image {
+                    margin: 0 auto 15px;
+                }
+    
+                .quantity-controls {
+                    justify-content: center;
+                }
+    
+                .order-summary {
+                    position: static;
+                    width: 100%;
+                }
+            }
+    
+            @media (max-width: 480px) {
+                .cart-container h2 {
+                    font-size: 28px;
+                }
+    
+                .product-details h3 {
+                    font-size: 18px;
+                }
+    
+                .product-details .price {
+                    font-size: 16px;
+                }
+    
+                .quantity-btn {
+                    width: 32px;
+                    height: 32px;
+                    font-size: 18px;
+                }
+    
+                .quantity {
+                    font-size: 16px;
+                }
+            }
+    
+            /* Existing Footer Styles (Unchanged) */
+            footer {
+                background-color: #172337;
+                color: #ffffff;
+                padding: 40px 20px;
+                margin-top: 40px;
+            }
+    
+            .footer-container {
+                display: flex;
+                justify-content: space-between;
+                max-width: 1200px;
+                margin: 0 auto;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+    
+            .footer-section {
+                flex: 1;
+                min-width: 200px;
+            }
+    
+            .footer-section h3 {
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 20px;
+                text-transform: uppercase;
+            }
+    
+            .newsletter {
+                display: flex;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+    
+            .newsletter input {
+                padding: 10px;
+                border: 1px solid #ffffff;
+                background-color: transparent;
+                color: #ffffff;
+                font-size: 14px;
+                width: 100%;
+                max-width: 200px;
+                border-radius: 4px 0 0 4px;
+                outline: none;
+            }
+    
+            .newsletter input::placeholder {
+                color: #cccccc;
+            }
+    
+            .newsletter button {
+                background-color: #ffffff;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 0 4px 4px 0;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+    
+            .newsletter button:hover {
+                background-color: #e6e6e6;
+            }
+    
+            .social-icons {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+    
+            .social-icons a {
+                display: inline-block;
+            }
+    
+            .social-icons img {
+                width: 24px;
+                height: 24px;
+                filter: brightness(0) invert(1);
+            }
+    
+            .social-icons a:hover img {
+                filter: brightness(0) invert(0.8);
+            }
+    
+            .footer-section p {
+                font-size: 12px;
+                color: #cccccc;
+            }
+    
+            .footer-section ul {
+                list-style: none;
+            }
+    
+            .footer-section ul li {
+                margin-bottom: 10px;
+            }
+    
+            .footer-section ul li a {
+                color: #ffffff;
+                text-decoration: none;
+                font-size: 14px;
+                transition: color 0.2s;
+            }
+    
+            .footer-section ul li a:hover {
+                color: #00c4b4;
+            }
+    
+            @media (max-width: 768px) {
+                header {
+                    flex-direction: column;
+                    padding: 20px;
+                }
+    
+                .search-bar {
+                    margin: 15px 0;
+                    width: 100%;
+                }
+    
+                nav {
+                    gap: 20px;
+                }
+    
+                .footer-container {
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                }
+    
+                .footer-section {
+                    margin-bottom: 30px;
+                }
+    
+                .newsletter {
+                    justify-content: center;
+                }
+    
+                .social-icons {
+                    justify-content: center;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h2><a href="/">Phonix</a></h2>
+            <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+            
+            <div class="search-bar">
+                <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                    <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                    <button type="button" id="clearSearch" style="display: none;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </form>
+            </div>
+            
+            <nav>
+                <a href="{% url 'cart' %}"><i class="fas fa-shopping-cart"></i> <span class="cart-count">0</span></a>
+                <a href="/wishlist"><i class="fas fa-heart"></i> <span class="wishlist-count">0</span></a>
+                <div class="dropdown">
+                    <button class="dropbtn"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content">
+                        <a href="{% url 'account_profile' %}">Profile</a>
+                        <a href="/logout">Logout</a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main class="cart-container">
+            <h2>Your Shopping Cart</h2>
+
+            <div id="cart-dynamic-content">
+                {% if cart_items %}
+                    <div class="cart-content" id="cart-content">
+                        <!-- Cart Items List -->
+                        <!-- Replace your cart items loop with this: -->
+                        <div class="cart-items">
+                            {% for enhanced_item in enhanced_cart_items %}
+                            {% with item=enhanced_item.cart_item %}
+                            <div class="cart-item" data-product-id="{{ item.variant.product.id }}" data-stock="{{ item.variant.stock }}">
+                                {% if item.variant.images.exists %}
+                                    {% with first_image=item.variant.images.first %}
+                                        <img src="{{ first_image.image.url }}" alt="{{ item.variant.product.name }}" class="product-image">
+                                    {% endwith %}
+                                {% else %}
+                                    <img src="{% static 'images/placeholder.png' %}" alt="No image available" class="product-image">
+                                {% endif %}
+                                
+                                <div class="product-details">
+                                    <h3>{{ item.variant.product.name }}</h3>
+                                    
+                                    <!-- Price display with discount if available -->
+                                    {% if enhanced_item.has_offer %}
+                                        <p class="price">
+                                            <span class="original-price" style="text-decoration: line-through;">₹{{ enhanced_item.original_price }}</span>
+                                            <span class="discounted-price">₹{{ enhanced_item.discounted_price }}</span>
+                                            <span class="discount-badge">(Save ₹{{ enhanced_item.max_discount }})</span>
+                                        </p>
+                                    {% else %}
+                                        <p class="price">₹{{ item.variant.price }}</p>
+                                    {% endif %}
+                                    
+                                    <!-- Quantity Controls -->
+                                    <div class="quantity-controls">
+                                        <a href="#" class="quantity-btn {% if item.quantity <= 1 %}disabled{% endif %}" 
+                                        data-action="decrease">➖</a>
+                                        <span class="quantity">{{ item.quantity }}</span>
+                                        <a href="#" class="quantity-btn {% if item.quantity >= item.variant.stock %}disabled{% endif %}" 
+                                        data-action="increase">➕</a>
+                                    </div>
+                                    <!-- Remove Button -->
+                                    <a href="#" class="remove-btn" data-product-id="{{ item.variant.product.id }}">Remove</a>
+                                </div>
+                            </div>      
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Order Summary -->
+                        <div class="order-summary">
+                            <h3>Order Summary</h3>
+                            <p>Subtotal: ₹<span id="subtotal">{{ subtotal }}</span></p>
+                            <p>Delivery Charges: ₹<span id="delivery-charge">{{ delivery_charge }}</span></p>
+                            <hr>
+                            <p><strong>Total: ₹<span id="total-price">{{ total_price }}</strong></span></p>
+
+                            {% if out_of_stock %}
+                                <p class="error-text">Some items have insufficient stock. Adjust quantities or remove them.</p>
+                                <button class="checkout-btn" disabled>Proceed to Checkout</button>
+                            {% else %}
+                            <a href="{% url 'checkout' %}" class="checkout-btn">Proceed to Checkout</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart empty-icon"></i>
+                    <h3>Your Cart is Empty</h3>
+                    <p>Add some products to your cart to see them here!</p>
+                    <a href="{% url 'shop_page' %}" class="shop-now-btn">Explore Products</a>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-container">
+                <div class="footer-section connect">
+                    <h3>CONNECT WITH US</h3>
+                    <div class="newsletter">
+                        <input type="email" placeholder="Enter Email ID">
+                        <button>→</button>
+                    </div>
+                    <div class="social-icons">
+                        <a><i class="fab fa-youtube"></i></a>
+                        <a><i class="fab fa-facebook-f"></i></a>
+                        <a><i class="fab fa-instagram"></i></a>
+                        <a><i class="fab fa-linkedin-in"></i></a>
+                        <a><i class="fab fa-twitter"></i></a>
+                    </div>
+                    <p>© Copyright 2025 Phonix. All rights reserved</p>
+                </div>
+        
+                <div class="footer-section useful-links">
+                    <h3>USEFUL LINKS</h3>
+                    <ul>
+                        <li><a>About Us</a></li>
+                        <li><a>Help & Support</a></li>
+                        <li><a>FAQs</a></li>
+                        <li><a>Return Policy</a></li>
+                        <li><a>Privacy Policy</a></li>
+                    </ul>
+                </div>
+        
+                <div class="footer-section products">
+                    <h3>PRODUCTS</h3>
+                    <ul>
+                        <li><a>Phones </a></li>
+                        <li><a>Laptops </a></li>
+                        <li><a>Top Brands</a></li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+    
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Set up checkout button handler
+                const checkoutBtn = document.querySelector('.checkout-btn:not([disabled])');
+                if (checkoutBtn) {
+                    checkoutBtn.addEventListener('click', function(e) {
+                        // Only intervene if it's an anchor tag
+                        if (this.tagName === 'A') {
+                            console.log("Checkout button clicked - proceeding to checkout");
+                            // Add a small delay to ensure any pending operations complete
+                            setTimeout(() => {
+                                window.location.href = this.getAttribute('href');
+                            }, 100);
+                            return false; // Prevent default and stop propagation
+                        }
+                        // For button elements, let the default behavior proceed
+                    });
+                }
+        
+                // Set up search functionality
+                document.getElementById('clearSearch').addEventListener('click', function() {
+                    document.getElementById('searchInput').value = '';
+                    window.location.href = '{% url "shop_page" %}';
+                });
+        
+                const searchInput = document.getElementById('searchInput');
+                const clearButton = document.getElementById('clearSearch');
+        
+                searchInput.addEventListener('input', function() {
+                    clearButton.style.display = this.value.trim() ? 'inline-block' : 'none';
+                });
+        
+                // Initialize everything on page load
+                window.onload = function() {
+                    clearButton.style.display = searchInput.value.trim() ? 'inline-block' : 'none';
+                    loadInitialCounts();
+                    setupQuantityControls();
+                    setupRemoveControls();
+                    updateCheckoutButton(); 
+                };
+        
+                // Load initial counts for cart and wishlist
+                function loadInitialCounts() {
+                    fetch('/get_cart_count/', {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.cart_count !== undefined) {
+                            updateCartCount(data.cart_count);
+                        }
+                    })
+                    .catch(error => console.error('Error loading cart count:', error));
+        
+                    fetch('/get_wishlist_count/', {
+                        method: 'GET',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.wishlist_count !== undefined) {
+                            updateWishlistCount(data.wishlist_count);
+                        }
+                    })
+                    .catch(error => console.error('Error loading wishlist count:', error));
+                }
+
+                // Update cart count - Make this function global for access from other functions
+                window.updateCartCount = function(count) {
+                    const cartCountElement = document.querySelector('.cart-count');
+                    if (cartCountElement) {
+                        console.log('Updating cart count to:', count);
+                        cartCountElement.textContent = count || '0';
+                    } else {
+                        console.error('Cart count element not found');
+                    }
+                }
+
+                // Make updateCartCount available globally
+                updateCartCount = window.updateCartCount;
+
+        
+                // Update cart count
+                function updateCartCount(count) {
+                    const cartCountElement = document.querySelector('.cart-count');
+                    if (cartCountElement) {
+                        cartCountElement.textContent = count || '0';
+                    }
+                }
+        
+                // Update wishlist count
+                function updateWishlistCount(count) {
+                    const wishlistCountElement = document.querySelector('.wishlist-count');
+                    if (wishlistCountElement) {
+                        wishlistCountElement.textContent = count || '0';
+                    }
+                }
+        
+                // Initialize quantity controls with stock validation
+                function setupQuantityControls() {
+                    document.querySelectorAll('.cart-item').forEach(cartItem => {
+                        const quantity = parseInt(cartItem.querySelector('.quantity').textContent);
+                        const decreaseBtn = cartItem.querySelector('.quantity-btn[data-action="decrease"]');
+                        const increaseBtn = cartItem.querySelector('.quantity-btn[data-action="increase"]');
+                        const stock = parseInt(cartItem.getAttribute('data-stock') || '999'); // Fallback if data-stock not set
+                        // Set initial button states
+                        if (quantity <= 1) {
+                            decreaseBtn.classList.add('disabled');
+                        }
+                            
+                        if (quantity >= stock) {
+                            increaseBtn.classList.add('disabled');
+                        }
+        
+                        // Add click handlers
+                        decreaseBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (!this.classList.contains('disabled')) {
+                                const productId = cartItem.getAttribute('data-product-id');
+                                this.classList.add('processing');
+                                updateQuantity(productId, 'decrease', cartItem);
+                            }
+                        });
+                        increaseBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (!this.classList.contains('disabled')) {
+                                const productId = cartItem.getAttribute('data-product-id');
+                                this.classList.add('processing');
+                                updateQuantity(productId, 'increase', cartItem);
+                            }
+                        });
+                    });
+                }
+        
+                // Toast Notification Function
+                function showToast(message, type = 'info') {
+                    const toastContainer = document.getElementById('toastContainer');
+                    const toast = document.createElement('div');
+                    toast.classList.add('toast');
+                    if (type === 'error') {
+                        toast.style.backgroundColor = '#ff4444';
+                    }
+                    toast.textContent = message;
+            
+                    toastContainer.appendChild(toast);
+            
+                    setTimeout(() => toast.classList.add('show'), 100);
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+
+                // Make these functions available globally
+                window.setupQuantityControls = setupQuantityControls;
+                window.setupRemoveControls = setupRemoveControls;
+                window.showToast = showToast;
+            });
+        
+            // Update quantity via AJAX with stock validation
+            function updateQuantity(productId, action, cartItem) {
+                const quantityElement = cartItem.querySelector('.quantity');
+                const currentQuantity = parseInt(quantityElement.textContent);
+                const decreaseBtn = cartItem.querySelector('.quantity-btn[data-action="decrease"]');
+                const increaseBtn = cartItem.querySelector('.quantity-btn[data-action="increase"]');
+                const productName = cartItem.querySelector('.product-details h3').textContent;
+            
+                fetch(`/update_cart_quantity/${productId}/${action}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.message || 'Request failed'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    cartItem.querySelectorAll('.quantity-btn').forEach(btn => btn.classList.remove('processing'));
+            
+                    if (data.success) {
+                        // Update quantity display
+                        if (data.quantity > 0) {
+                            quantityElement.textContent = data.quantity;
+                        } else {
+                            // Item was removed (quantity went to 0)
+                            cartItem.remove();
+                            updateCartVisibility();
+                            updateCheckoutButton();
+                        }
+            
+                        // Update button states
+                        if (action === 'increase') {
+                            if (data.quantity >= data.stock) {
+                                increaseBtn.classList.add('disabled');
+                                // Show SweetAlert for reaching stock limit
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Stock Limit Reached',
+                                    text: `Cannot add more ${productName}. Maximum stock (${data.stock}) reached.`,
+                                    timer: 2500,
+                                    timerProgressBar: true,
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false
+                                });
+                            } else {
+                                // Show SweetAlert for successful increase
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Quantity Increased',
+                                    text: `${productName} quantity updated to ${data.quantity}`,
+                                    timer: 2000,
+                                    timerProgressBar: true,
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false
+                                });
+                            }
+                            decreaseBtn.classList.remove('disabled');
+                        } else if (action === 'decrease') {
+                            // Show SweetAlert for successful decrease
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Quantity Decreased',
+                                text: `${productName} quantity updated to ${data.quantity}`,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false
+                            });
+                            
+                            if (data.quantity <= 1) {
+                                decreaseBtn.classList.add('disabled');
+                            }
+                            increaseBtn.classList.remove('disabled');
+                        }
+            
+                        // Update order summary using the new function
+                        updateOrderSummary(data.subtotal, data.delivery_charge, data.total_price);
+                        {% comment %} updateCartCount(data.cart_count); {% endcomment %}
+                        // IMPORTANT: Update cart count in the header
+                        if (typeof data.cart_count !== 'undefined') {
+                            console.log('Received cart count from server:', data.cart_count);
+                            window.updateCartCount(data.cart_count);
+                        } else {
+                            console.warn('Cart count not received from server');
+                            // Fallback: refresh cart count from server
+                            fetchCartCount();
+                        }
+
+                        if (data.quantity === 0) {
+                            // Show SweetAlert for product removed
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Product Removed',
+                                text: `${productName} removed from cart`,
+                                timer: 2000,
+                                timerProgressBar: true,
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false
+                            });
+                        }
+                    } else {
+                        // Show SweetAlert for error
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to update quantity.',
+                            timer: 2500,
+                            timerProgressBar: true,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    cartItem.querySelectorAll('.quantity-btn').forEach(btn => btn.classList.remove('processing'));
+                    
+                    // Show SweetAlert for error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Failed to update quantity.',
+                        timer: 2500,
+                        timerProgressBar: true,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                });
+            }
+        
+            // Setup remove controls with AJAX
+            function setupRemoveControls() {
+                document.querySelectorAll('.remove-btn').forEach(button => {
+                    button.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        console.log("Remove button clicked!"); 
+                        const productId = this.getAttribute('data-product-id');
+                        const cartItem = this.closest('.cart-item');
+                        const productName = cartItem.querySelector('.product-details h3').textContent;
+                        this.classList.add('processing');
+                        removeItem(productId, cartItem, productName);
+                    });
+                });
+            }
+        
+            function removeItem(productId, cartItem, productName) {
+                console.log(`Attempting to remove product ID: ${productId}`);
+                
+                const csrfToken = getCookie('csrftoken');
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'CSRF token missing. Please refresh the page.',
+                        timer: 2500,
+                        timerProgressBar: true,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                    return;
+                }
+            
+                fetch(`/remove_from_cart/${productId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Remove response:", data);
+                    
+                    if (data.success) {
+                        // Remove item from DOM
+                        console.log(`Removing cart item from DOM: ${productName}`);
+                        cartItem.remove();
+                        
+                        // Show SweetAlert for successful removal
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Product Removed',
+                            text: `${productName} removed from cart`,
+                            timer: 2000,
+                            timerProgressBar: true,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false
+                        });
+                        
+                        // Update order summary with the new values from the response
+                        updateOrderSummary(data.subtotal, data.delivery_charge, data.total_price);
+                        
+                        // Check if this was the last item
+                        const remainingItems = document.querySelectorAll('.cart-item');
+                        
+                        if (remainingItems.length === 0) {
+                            // This was the last item, replace entire content with empty message
+                            const cartDynamicContent = document.getElementById('cart-dynamic-content');
+                            cartDynamicContent.innerHTML = `
+                            <div class="empty-cart">
+                                <i class="fas fa-shopping-cart empty-icon"></i>
+                                <h3>Your Cart is Empty</h3>
+                                <p>Add some products to your cart to see them here!</p>
+                                <a href="{% url 'shop_page' %}" class="shop-now-btn">Explore Products</a>
+                            </div>`;
+                        }
+            
+                        // Update cart count in header
+                        updateCartCount(data.cart_count || 0);
+                        
+                        // Update checkout button state
+                        updateCheckoutButton();
+                    } else {
+                        throw new Error(data.message || 'Failed to remove item');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in removeItem:', error);
+                    
+                    // Show SweetAlert for error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message || 'Failed to remove item. Please try again.',
+                        timer: 2500,
+                        timerProgressBar: true,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                    
+                    if (cartItem.querySelector('.remove-btn')) {
+                        cartItem.querySelector('.remove-btn').classList.remove('processing');
+                    }
+                });
+            }
+            
+            // Add this new function to update the order summary
+            function updateOrderSummary(subtotal, deliveryCharge, totalPrice) {
+                const subtotalElement = document.getElementById('subtotal');
+                const deliveryChargeElement = document.getElementById('delivery-charge');
+                const totalPriceElement = document.getElementById('total-price');
+                
+                if (subtotalElement && deliveryChargeElement && totalPriceElement) {
+                    console.log('Updating order summary with:', {
+                        subtotal: subtotal,
+                        delivery_charge: deliveryCharge,
+                        total_price: totalPrice
+                    });
+                    
+                    subtotalElement.textContent = subtotal || '0';
+                    deliveryChargeElement.textContent = deliveryCharge || '0';
+                    totalPriceElement.textContent = totalPrice || '0';
+                } else {
+                    console.error('Order summary elements not found in the DOM');
+                }
+            }
+        
+            // Enhanced updateCartVisibility function
+            function updateCartVisibility() {
+                const cartContent = document.querySelector('.cart-content');
+                const emptyCartMessage = document.getElementById('empty-cart-message');
+                const cartItems = document.querySelectorAll('.cart-item');
+                const orderSummary = document.querySelector('.order-summary');
+                const cartDynamicContent = document.getElementById('cart-dynamic-content');
+
+                console.log(`Updating cart visibility, cart items count: ${cartItems.length}`);
+
+                if (cartItems.length === 0) {
+                    console.log('Cart is empty, hiding content and summary, showing empty message');
+                    // Hide cart content container if it exists
+                    if (cartContent) {
+                        cartContent.style.display = 'none';
+                    }
+                    
+                    // Create empty message if it doesn't exist
+                    if (!emptyCartMessage) {
+                        console.log('Creating new empty cart message');
+                        cartDynamicContent.innerHTML = `
+                        <div class="empty-cart">
+                            <i class="fas fa-shopping-cart empty-icon"></i>
+                            <h3>Your Cart is Empty</h3>
+                            <p>Add some products to your cart to see them here!</p>
+                            <a href="{% url 'shop_page' %}" class="shop-now-btn">Explore Products</a>
+                        </div>`;
+                    } else {
+                        emptyCartMessage.style.display = 'block';
+                    }
+                } else {
+                    console.log('Cart has items, showing content and summary, hiding empty message');
+                    if (cartContent) cartContent.style.display = 'flex';
+                    if (orderSummary) orderSummary.style.display = 'block';
+                    if (emptyCartMessage) emptyCartMessage.style.display = 'none';
+                }
+            }
+
+            function updateCheckoutButton() {
+                const checkoutBtn = document.querySelector('.checkout-btn');
+                const cartItems = document.querySelectorAll('.cart-item');
+            
+                console.log(`Updating checkout button, cart items count: ${cartItems.length}`);
+            
+                if (checkoutBtn) {
+                    if (cartItems.length === 0) {
+                        console.log('Disabling checkout button');
+                        checkoutBtn.classList.add('disabled');
+                        checkoutBtn.setAttribute('disabled', 'disabled');
+                        if (checkoutBtn.tagName === 'A') {
+                            checkoutBtn.removeAttribute('href');
+                        }
+                    } else {
+                        console.log('Enabling checkout button');
+                        checkoutBtn.classList.remove('disabled');
+                        checkoutBtn.removeAttribute('disabled');
+                        if (checkoutBtn.tagName === 'A' && !checkoutBtn.getAttribute('href')) {
+                            checkoutBtn.setAttribute('href', '{% url "checkout" %}');
+                        }
+                    }
+                } else {
+                    console.log('Checkout button not found');
+                }
+            }
+        
+            // Get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                console.log('Processing Django messages');
+                {% if messages %}
+                    const messages = [
+                        {% for message in messages %}
+                            {
+                                level: "{{ message.tags }}",
+                                text: "{{ message }}"
+                            },
+                        {% endfor %}
+                    ];
+                    if (typeof Swal !== 'undefined') {
+                        messages.forEach(message => {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-right',
+                                icon: message.level === 'success' ? 'success' : 'error',
+                                title: message.text,
+                                showConfirmButton: false,
+                                timer: 3000
+                            });
+                        });
+                    } else {
+                        console.warn('SweetAlert2 not loaded, using toast instead');
+                        messages.forEach(message => {
+                            showToast(message.text, message.level === 'success' ? 'info' : 'error');
+                        });
+                    }
+                {% endif %}
+            });
+        </script>
+   
+    </body>
+    </html>

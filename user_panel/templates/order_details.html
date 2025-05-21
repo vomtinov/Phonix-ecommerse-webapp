@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+    <style>
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        /* Body */
+        body {
+            background-color: #f0f2f5;
+            color: #111111;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background-color: #131921;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        header h1 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        header h2 a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 18px;
+            margin-left: 25px;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            margin: 0 25px;
+        }
+
+        .search-bar form {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #febd69;
+        }
+
+        .search-bar input {
+            border: none;
+            outline: none;
+            padding: 10px;
+            width: 100%;
+            font-size: 15px;
+        }
+
+        .search-bar button {
+            background-color: #febd69;
+            border: none;
+            color: #111111;
+            font-size: 16px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .search-bar button:hover {
+            background-color: #f3a847;
+        }
+
+        #clearSearch {
+            color: #555555;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        nav a {
+            color: #ffffff;
+            font-size: 20px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #febd69;
+        }
+
+        .cart-count, .wishlist-count {
+            background-color: #ff4444; /* Red background */
+            color: white; /* White text */
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 6px; /* Padding for spacing */
+            font-size: 12px; /* Font size */
+            margin-left: 5px; /* Margin to separate from the icon */
+            vertical-align: top; /* Align with the icon */
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #ffffff;
+            min-width: 140px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: #111111;
+            padding: 12px 20px;
+            display: block;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f5f5f5;
+            color: #e47911;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Layout Container - Improved with flexbox */
+        .container-fluid {
+            flex: 1;
+            display: flex;
+            padding: 0;
+        }
+
+        /* Sidebar Styles - Improved for responsiveness */
+        .sidebar {
+            background-color: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            padding: 20px;
+            width: 250px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar ul li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #1f2937;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #f3f4f6;
+            color: #2563eb;
+        }
+
+        .sidebar ul li a.active {
+            background-color: #e0f2fe;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .sidebar .logout-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar .logout-btn:hover {
+            background-color: #b91c1c;
+        }
+
+        /* Main content area - Improved for responsiveness */
+        main.order-list {
+            flex: 1;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin: 20px;
+            overflow-x: auto; /* For table overflow on smaller screens */
+            transition: all 0.3s ease;
+        }
+
+        .order-list h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+
+        /* Responsive table styles */
+        .order-list .table-responsive {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .order-list table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .order-list table th,
+        .order-list table td {
+            padding: 15px;
+            text-align: left;
+            font-size: 14px;
+            color: #1f2937;
+        }
+
+        .order-list table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .order-list table td {
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s ease;
+        }
+
+        .order-list table tr:hover td {
+            background-color: #f9fafb;
+        }
+
+        .order-list table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status styling */
+        .order-list table td:nth-child(4) {
+            font-weight: 500;
+        }
+
+        .order-list table td:nth-child(4):before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .order-list table td:nth-child(4)[data-status="Pending"]:before,
+        .order-list table td:nth-child(4)[data-status="Confirmed"]:before,
+        .order-list table td:nth-child(4)[data-status="Shipped"]:before {
+            background-color: #f59e0b;
+        }
+
+        .order-list table td:nth-child(4)[data-status="Delivered"]:before {
+            background-color: #10b981;
+        }
+
+        .order-list table td:nth-child(4)[data-status="Cancelled"]:before,
+        .order-list table td:nth-child(4)[data-status="Returned"]:before,
+        .order-list table td:nth-child(4)[data-status="Return Requested"]:before {
+            background-color: #ef4444;
+        }
+
+        /* Button and link styles */
+        .order-list a,
+        .order-list button {
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .order-list a[href*='order_fulldetail_view'] {
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .order-list a[href*='order_fulldetail_view']:hover {
+            color: #1d4ed8;
+            background-color: #eff6ff;
+        }
+
+        .cancel-btn {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: none;
+            font-weight: 500;
+        }
+
+        .cancel-btn:hover {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .return-btn {
+            background-color: #fff7ed;
+            color: #f59e0b;
+            border: none;
+            font-weight: 500;
+        }
+
+        .return-btn:hover {
+            background-color: #ffedd5;
+            color: #d97706;
+        }
+
+        .download-invoice-btn {
+            background-color: #e0f2fe;
+            color: #0284c7;
+            font-weight: 500;
+        }
+
+        .download-invoice-btn:hover {
+            background-color: #bae6fd;
+            color: #026395;
+        }
+
+        /* Pagination styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 10px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #1f2937;
+            background-color: #f3f4f6;
+            transition: all 0.2s ease;
+        }
+
+        .pagination a:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+
+        .pagination span {
+            background-color: #e0f2fe;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #172337;
+            color: #ffffff;
+            padding: 40px 20px;
+            margin-top: 0; /* Changed from 40px */
+        }
+
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .newsletter {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .newsletter input {
+            padding: 10px;
+            border: 1px solid #ffffff;
+            background-color: transparent;
+            color: #ffffff;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+        }
+
+        .newsletter input::placeholder {
+            color: #cccccc;
+        }
+
+        .newsletter button {
+            background-color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .newsletter button:hover {
+            background-color: #e6e6e6;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .social-icons a {
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .social-icons i {
+            color: white;
+            font-size: 18px;
+        }
+
+        .social-icons a:hover i {
+            color: #febd69;
+        }
+
+        .footer-section p {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .footer-section ul li a:hover {
+            color: #00c4b4;
+        }
+
+        /* Card style for mobile view */
+        .order-card {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .order-card-detail {
+            margin-bottom: 8px;
+        }
+        
+        .order-card-detail span:first-child {
+            font-weight: 500;
+            color: #4b5563;
+        }
+        
+        .order-card-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Improved Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 220px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .container-fluid {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+                position: relative;
+                height: auto;
+                padding: 15px;
+            }
+            
+            .sidebar ul {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .sidebar ul li {
+                margin-bottom: 0;
+                flex-grow: 1;
+                width: calc(33.333% - 10px);
+                min-width: 200px;
+            }
+            
+            .sidebar .logout-btn {
+                width: auto;
+            }
+            
+            main.order-list {
+                margin: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .search-bar {
+                margin: 15px 0;
+                width: 100%;
+            }
+
+            nav {
+                gap: 20px;
+            }
+            
+            .sidebar ul li {
+                width: calc(50% - 10px);
+            }
+
+            main.order-list {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            .order-list h2 {
+                font-size: 24px;
+            }
+            
+            .pagination {
+                gap: 5px;
+            }
+            
+            .pagination a,
+            .pagination span {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .footer-container {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .footer-section {
+                margin-bottom: 30px;
+            }
+
+            .newsletter {
+                justify-content: center;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100%;
+                width: 250px;
+                z-index: 1001;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                overflow-y: auto;
+                background-color: #ffffff; /
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar ul {
+                flex-direction: column;
+            }
+            
+            .sidebar ul li {
+                width: 100%;
+            }
+            
+            /* Hide table and show cards on small screens */
+            .order-list table, 
+            .order-list .table-responsive {
+                display: none;
+            }
+            
+            .order-cards {
+                display: block;
+            }
+            
+            .order-card {
+                display: block;
+            }
+            
+            .order-card-buttons .cancel-btn,
+            .order-card-buttons .return-btn,
+            .order-card-buttons .download-invoice-btn,
+            .order-card-buttons a[href*='order_fulldetail_view'] {
+                width: 48%;
+                text-align: center;
+                margin-bottom: 5px;
+            }
+            
+            .pagination {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2><a href="/">Phonix</a></h2>
+        <h2><a href="{% url 'shop_page' %}">Shop</a></h2>
+
+        <div class="search-bar">
+            <form action="{% url 'search_products' %}" method="GET" id="searchForm">
+                <input type="text" name="query" placeholder="Search products..." value="{{ query|default:'' }}" id="searchInput">
+                <button type="submit"><i class="fas fa-search"></i></button>
+                <button type="button" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+
+        <nav>
+            <a href="/cart"><i class="fas fa-shopping-cart"></i><span class="cart-count"></span></a>
+            <a href="/wishlist"><i class="fas fa-heart"></i><span class="wishlist-count"></span></a>
+            <div class="dropdown">
+                <button class="dropbtn"><i class="fas fa-user"></i></button>
+                <div class="dropdown-content">
+                    <a href="{% url 'account_profile' %}">Profile</a> 
+                    <a href="{% url 'logout' %}">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="container-fluid">
+        <aside class="sidebar" id="sidebar">
+            <ul>
+                <li><a href="{% url 'account_profile' %}">Account Overview</a></li>
+                <li><a href="{% url 'order_details' %}" class="active">Order Details</a></li>
+                <li><a href="{% url 'manage_address' %}">Manage Address</a></li>
+                <li><a href="/wallet">Wallet</a></li>
+                <li><a href="/wishlist">Wishlist</a></li>
+                <li><button onclick="location.href='/logout'" class="logout-btn">Logout</button></li>
+            </ul>
+        </aside>
+        
+        <button id="sidebar-toggle" class="sidebar-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+    
+        <main class="order-list">
+            {% if user.is_authenticated %}
+                <h2>Your Orders</h2>
+                
+                {% if page_obj %}
+                    <!-- Table view for larger screens -->
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Total Price</th>
+                                    <th>Status</th>
+                                    <th>Details</th>
+                                    <th>Action</th>
+                                    <th>Invoice</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in page_obj %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                    <td>₹{{ order.total_price }}</td>
+                                    <td data-status="{{ order.status }}">{{ order.status }}</td>
+                                    <td><a href="{% url 'order_fulldetail_view' order.id %}">View Details</a></td>
+                                    <td>
+                                        {% if order.status in "Pending,Confirmed,Shipped" %}
+                                            <button class="cancel-btn" data-order-id="{{ order.id }}">Cancel</button>
+                                        {% endif %}
+                                        {% if order.status == "Delivered" %}
+                                            <button class="return-btn" data-order-id="{{ order.id }}">Return</button>
+                                        {% endif %}
+                                        {% if order.status == "Returned" or order.status == "Return Requested" %}
+                                            <!-- No action buttons -->
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'generate_invoice_pdf' order.id %}" class="download-invoice-btn" data-order-id="{{ order.id }}">Download Invoice</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Card view for mobile screens -->
+                    <div class="order-cards">
+                        {% for order in page_obj %}
+                        <div class="order-card">
+                            <div class="order-card-header">
+                                <h3>Order #{{ order.id }}</h3>
+                                <span data-status="{{ order.status }}">{{ order.status }}</span>
+                            </div>
+                            
+                            <div class="order-card-detail">
+                                <span>Date: </span>
+                                <span>{{ order.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            
+                            <div class="order-card-detail">
+                                <span>Total: </span>
+                                <span>₹{{ order.total_price }}</span>
+                            </div>
+                            
+                            <div class="order-card-buttons">
+                                <a href="{% url 'order_fulldetail_view' order.id %}" class="btn">View Details</a>
+                                
+                                {% if order.status in "Pending,Confirmed,Shipped" %}
+                                    <button class="cancel-btn" data-order-id="{{ order.id }}">Cancel</button>
+                                {% endif %}
+                                
+                                {% if order.status == "Delivered" %}
+                                    <button class="return-btn" data-order-id="{{ order.id }}">Return</button>
+                                {% endif %}
+                                
+                                <a href="{% url 'generate_invoice_pdf' order.id %}" class="download-invoice-btn" data-order-id="{{ order.id }}">Download Invoice</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+        
+                    <!-- Pagination Controls -->
+                    <div class="pagination">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1">« First</a>
+                            <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        {% endif %}
+        
+                        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}">Last »</a>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p>No orders found for this user.</p>
+                {% endif %}
+            {% else %}
+                <p>Please login to view your Order details.</p>
+            {% endif %}
+        </main>
+    </div>
+    
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section connect">
+                <h3>CONNECT WITH US</h3>
+                <div class="newsletter">
+                    <input type="email" placeholder="Enter Email ID">
+                    <button>→</button>
+                </div>
+                <div class="social-icons">
+                    <a><i class="fab fa-youtube"></i></a>
+                    <a><i class="fab fa-facebook-f"></i></a>
+                    <a><i class="fab fa-instagram"></i></a>
+                    <a><i class="fab fa-linkedin-in"></i></a>
+                    <a><i class="fab fa-twitter"></i></a>
+                </div>
+                <p>© Copyright 2025 Phonix. All rights reserved</p>
+            </div>
+    
+            <div class="footer-section useful-links">
+                <h3>USEFUL LINKS</h3>
+                <ul>
+                    <li><a>About Us</a></li>
+                    <li><a>Help & Support</a></li>
+                    <li><a>FAQs</a></li>
+                    <li><a>Return Policy</a></li>
+                    <li><a>Privacy Policy</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-section products">
+                <h3>PRODUCTS</h3>
+                <ul>
+                    <li><a>Phones </a></li>
+                    <li><a>Laptops </a></li>
+                    <li><a>Top Brands</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 🔹 Mobile sidebar toggle
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+
+            if (sidebar && sidebarToggle) {
+                sidebarToggle.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Prevent click from triggering close
+                    sidebar.classList.toggle('show');
+                });
+
+                // Close sidebar when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (sidebar.classList.contains('show') && 
+                        !sidebar.contains(event.target) && 
+                        !sidebarToggle.contains(event.target)) {
+                        sidebar.classList.remove('show');
+                    }
+                });
+
+                // Prevent clicks inside sidebar from closing it
+                sidebar.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            }
+
+            // 🔹 Search Input & Clear Button
+            let searchInput = document.getElementById("searchInput");
+            let clearSearch = document.getElementById("clearSearch");
+            
+            if (searchInput && clearSearch) {
+                searchInput.addEventListener("input", function () {
+                    clearSearch.style.display = searchInput.value.trim() !== "" ? "inline-block" : "none";
+                });
+                
+                clearSearch.addEventListener("click", function () {
+                    searchInput.value = "";
+                    clearSearch.style.display = "none";
+                });
+            }
+        
+            // 🔹 Cancel Order Functionality
+            function cancelOrder(orderId, button) {
+                let csrfToken = document.getElementById("csrf_token").value;
+                fetch(`/cancel-order/${orderId}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire("Cancelled!", "Your order has been cancelled.", "success")
+                        .then(() => {
+                            const statusCell = button.closest('tr').querySelector('td:nth-child(4)');
+                            statusCell.textContent = "Cancelled";
+                            statusCell.setAttribute('data-status', 'Cancelled');
+                            button.closest('td').innerHTML = '';  // Remove button
+                        });
+                    } else {
+                        Swal.fire("Error", data.message, "error");
+                    }
+                })
+                .catch(error => Swal.fire("Error", "Something went wrong!", "error"));
+            }
+            
+            // 🔹 Return Order Functionality
+            function requestReturn(orderId, reason, button) {
+                fetch(`/return-order/${orderId}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": getCookie("csrftoken"),
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify({ reason: reason })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire("Requested!", "Return request submitted successfully.", "success")
+                        .then(() => {
+                            const row = button.closest('tr');
+                            const statusCell = row.querySelector('td:nth-child(4)');
+                            statusCell.textContent = "Return Requested";
+                            statusCell.setAttribute('data-status', 'Return Requested');
+                            row.querySelector('td:nth-child(6)').innerHTML = '';
+                        });
+                    } else {
+                        console.error("Return request failed:", data.message);
+                        Swal.fire("Error", data.message, "error");
+                    }
+                })
+                .catch(error => Swal.fire("Error", "Something went wrong!", "error"));
+            }
+        
+            // 🔹 Attach Button Listeners
+            function attachButtonListeners(cell) {
+                const cancelBtn = cell.querySelector('.cancel-btn');
+                const returnBtn = cell.querySelector('.return-btn');
+                
+                if (cancelBtn) {
+                    cancelBtn.addEventListener("click", function () {
+                        let orderId = this.getAttribute("data-order-id");
+                        Swal.fire({
+                            title: "Are you sure?",
+                            text: "Do you want to cancel this order?",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "Yes, cancel it!",
+                            cancelButtonText: "No, keep it"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                cancelOrder(orderId, this);
+                            }
+                        });
+                    });
+                }
+                
+                if (returnBtn) {
+                    returnBtn.addEventListener("click", function () {
+                        let orderId = this.getAttribute("data-order-id");
+                        Swal.fire({
+                            title: "Request Return",
+                            text: "Please provide a reason for return:",
+                            input: "text",
+                            inputPlaceholder: "Enter reason here...",
+                            showCancelButton: true,
+                            confirmButtonText: "Submit Return",
+                            cancelButtonText: "Cancel",
+                            inputValidator: (value) => {
+                                if (!value.trim()) {
+                                    return "You must provide a reason for the return!";
+                                }
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                requestReturn(orderId, result.value, this);
+                            }
+                        });
+                    });
+                }
+            }
+        
+            // 🔹 Initial Button Listeners
+            document.querySelectorAll(".cancel-btn, .return-btn").forEach(button => {
+                if (button.parentElement) {
+                    attachButtonListeners(button.parentElement);
+                }
+            });
+        
+            // 🔹 Update Order Statuses
+            function updateOrderStatuses() {
+                fetch('/get_order_statuses/', {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error(`Fetch failed with status: ${response.status}`);
+                        throw new Error(`Fetch failed: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        console.log("Polled statuses:", data.statuses);
+                        const currentRows = document.querySelectorAll('tbody tr');
+                        currentRows.forEach(row => {
+                            const orderId = row.cells[0].textContent.slice(1); // Remove '#'
+                            const currentStatus = row.cells[3].textContent.trim();
+                            const newStatus = data.statuses[orderId];
+                            if (newStatus && newStatus !== currentStatus) {
+                                console.log(`Order #${orderId} updating from ${currentStatus} to ${newStatus}`);
+                                row.cells[3].textContent = newStatus;
+                                const actionCell = row.cells[5];
+                                actionCell.innerHTML = '';
+                                if (["Cancelled", "Returned", "Return Requested"].includes(newStatus)) {
+                                    // No buttons
+                                } else if (newStatus === "Delivered") {
+                                    actionCell.innerHTML = `<button class="return-btn" data-order-id="${orderId}">Return</button>`;
+                                } else if (["Pending", "Confirmed", "Shipped"].includes(newStatus)) {
+                                    actionCell.innerHTML = `<button class="cancel-btn" data-order-id="${orderId}">Cancel</button>`;
+                                }
+                                attachButtonListeners(actionCell);
+                            }
+                        });
+                    } else {
+                        console.error("Polling failed:", data.error);
+                    }
+                })
+                .catch(error => console.error('Polling error:', error));            }
+        
+            // 🔹 Download Invoice Functionality (unchanged)
+            document.querySelectorAll(".download-invoice-btn").forEach(link => {
+                link.addEventListener("click", function (event) {
+                    event.preventDefault();
+                    const orderId = this.getAttribute("data-order-id");
+                    const url = this.getAttribute("href");
+                    fetch(url, {
+                        method: "GET",
+                        headers: { "Accept": "application/pdf" }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        const downloadLink = document.createElement("a");
+                        downloadLink.href = URL.createObjectURL(blob);
+                        downloadLink.download = `Invoice_Order_${orderId}.pdf`;
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                        Swal.fire("Success!", "Invoice downloaded successfully as PDF.", "success");
+                    })
+                    .catch(error => {
+                        console.error("Download Error:", error);
+                        Swal.fire("Error", `Failed to download invoice: ${error.message}`, "error");
+                    });
+                });
+            });
+        
+            // 🔹 Load Cart and Wishlist Counts (unchanged)
+            function loadInitialCounts() {
+                fetch('/get_cart_count/', {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Initial cart count response:', data);
+                    if (data.cart_count !== undefined) updateCartCount(data.cart_count);
+                    else updateCartCount(0);
+                })
+                .catch(error => console.error('Error loading cart count:', error));
+        
+                fetch('/get_wishlist_count/', {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Initial wishlist count response:', data);
+                    if (data.wishlist_count !== undefined && data.wishlist_count !== null) updateWishlistCount(data.wishlist_count);
+                    else updateWishlistCount(0);
+                })
+                .catch(error => {
+                    console.error('Error loading wishlist count:', error);
+                    updateWishlistCount(0);
+                });
+            }
+        
+            function updateCartCount(count) {
+                const cartCountElement = document.querySelector('.cart-count');
+                cartCountElement.textContent = count || '0';
+                console.log('Updated cart count to:', count || '0');
+            }
+        
+            function updateWishlistCount(count) {
+                const wishlistCountElement = document.querySelector('.wishlist-count');
+                wishlistCountElement.textContent = count || '0';
+                wishlistCountElement.style.display = 'inline-block';
+                console.log('Updated wishlist count to:', count || '0');
+            }
+        
+            loadInitialCounts();
+        
+            // 🔹 Utility Function for CSRF Token (unchanged)
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+        
+            setInterval(updateOrderStatuses, 5000);  // Reduced to 5s as previously updated
+            updateOrderStatuses();  // Run immediately 
+        });
+    </script>
+</body>
+</html>
